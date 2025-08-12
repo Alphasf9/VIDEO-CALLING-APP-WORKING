@@ -18,9 +18,12 @@ const server = http.createServer(app);
 // Socket.IO setup
 const io = new Server(server, {
     cors: {
-        origin: "*",
-    },
+        origin:process.env.CLIENT_URL,
+        methods: ["GET", "POST"],
+        credentials: true
+    }
 });
+
 
 const emailToSocketIdMap = new Map();
 const socketIdToEmailMap = new Map();
