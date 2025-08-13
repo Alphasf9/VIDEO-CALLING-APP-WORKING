@@ -4,6 +4,9 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 dotenv.config();
 import cors from "cors";
+import cookieParser from "cookie-parser";
+import userRoutes from "./routes/User.routes.js";
+import morgan from "morgan";
 
 const app = express();
 app.use(cors());
@@ -12,18 +15,17 @@ app.get("/", (req, res) => {
     res.send("✅ WebRTC Signaling Server is running");
 });
 
-// Create HTTP server
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(morgan("dev"));
 const server = http.createServer(app);
 
-// Socket.IO setup
 const io = new Server(server, {
     cors: {
-        origin:process.env.CLIENT_URL,
-        methods: ["GET", "POST"],
-        credentials: true
-    }
+        origin: "*",
+    },
 });
-
 
 const emailToSocketIdMap = new Map();
 const socketIdToEmailMap = new Map();
@@ -55,7 +57,11 @@ io.on("connection", (socket) => {
 });
 
 
-const PORT = 8000;
+app.use('/api/v1/users', userRoutes);
+
+
+
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
     console.log(`🚀 Server listening on port ${PORT}`);
 });
