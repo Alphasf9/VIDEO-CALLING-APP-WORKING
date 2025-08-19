@@ -10,7 +10,6 @@ const Room = () => {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
 
-  // Loading messages to cycle through
   const loadingMessages = [
     "Preparing your video call experience...",
     "Searching for your meeting partner...",
@@ -18,7 +17,6 @@ const Room = () => {
     "Getting ready to connect you..."
   ];
 
-  // Cycle loading messages every 3 seconds
   useEffect(() => {
     if (!remoteSocketId) {
       const interval = setInterval(() => {
@@ -28,7 +26,6 @@ const Room = () => {
     }
   }, [loadingMessages.length, remoteSocketId]);
 
-  // Listen for remote tracks instantly
   useEffect(() => {
     Peer.onTrack((stream) => {
       console.log("📹 Remote stream received");
@@ -95,24 +92,23 @@ const Room = () => {
     };
   }, [socket, handleJoinUser, handleOfferReceived, handleAnswerReceived]);
 
-  // Sample user reviews
   const reviews = [
     {
       name: "Dr. Emily Harper",
       role: "Chief Technology Officer",
-      review: "VideoSync delivers unmatched video quality and reliability, transforming our global team meetings into seamless experiences.",
+      review: "Learning Hub delivers unmatched video quality and reliability, transforming our global team meetings into seamless experiences.",
       rating: 5,
     },
     {
       name: "James Patel",
       role: "Project Manager",
-      review: "The intuitive interface and robust performance make VideoSync the perfect tool for coordinating with clients worldwide.",
+      review: "The intuitive interface and robust performance make Learning Hub the perfect tool for coordinating with clients worldwide.",
       rating: 4,
     },
     {
       name: "Sophia Nguyen",
       role: "Educator & Consultant",
-      review: "VideoSync's elegant design and flawless connectivity have elevated my virtual workshops to a professional standard.",
+      review: "Learning Hub's elegant design and flawless connectivity have elevated my virtual workshops to a professional standard.",
       rating: 5,
     },
   ];
@@ -121,7 +117,7 @@ const Room = () => {
     <div className="min-h-screen bg-white flex flex-col items-center gap-8 p-6 md:p-12">
       <div className="text-center">
         <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
-          VideoSync Meeting Room
+          Learning Hub Meeting Room
         </h1>
         <p className="text-gray-600 text-lg md:text-xl font-medium mt-2">
           Connect seamlessly with crystal-clear video and audio

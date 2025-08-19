@@ -6,10 +6,14 @@ dotenv.config();
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/User.routes.js";
+import matchRoutes from "./routes/Match.routes.js";
 import morgan from "morgan";
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true
+}));
 
 app.get("/", (req, res) => {
     res.send("✅ WebRTC Signaling Server is running");
@@ -58,6 +62,7 @@ io.on("connection", (socket) => {
 
 
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/matches', matchRoutes);
 
 
 

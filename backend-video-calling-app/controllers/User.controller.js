@@ -13,13 +13,15 @@ export const signupSchema = z.object({
     name: z.string().min(2, "Name is required"),
     email: z.string().email("Invalid email address")
         .transform((val) => val.toLowerCase()),
-    password: z.string().min(8, "Password must be at least 8 characters long"),
-    role: z.enum(["learner", "educator"]).optional()
+    topic: z.array(z.string().min(2, "Topic is required")).nonempty("At least one topic is required"),
+    bio: z.string().max(500, "Bio cannot exceed 500 characters"),
+    password: z.string().min(6, "Password must be at least 6 characters long"),
+    role: z.enum(["learner", "educator"])
 });
 
 export const loginSchema = z.object({
     email: z.string().email("Invalid email address").transform(val => val.toLowerCase()),
-    password: z.string().min(8, "Password must be atleast 8 character long"),
+    password: z.string().min(6, "Password must be atleast 6 character long"),
 })
 
 
@@ -27,34 +29,53 @@ export const loginSchema = z.object({
 export const signUpUser = async (req, res) => {
     try {
         const parsedData = signupSchema.parse(req.body);
+
         const userExists = await UserModel.userExistsByEmail(parsedData.email);
         if (userExists) {
-            console.log(userExists);
             return res.status(400).json({ message: "User already exists" });
         }
 
         const userId = uuidv4();
         const hashedPassword = await hashPassword(parsedData.password);
 
-
-        const user = await UserModel.createUser({
+        // Default values for new fields
+        const defaultUserData = {
             userId,
             email: parsedData.email,
             name: parsedData.name,
             password: hashedPassword,
             role: parsedData.role || "learner",
+            bio: parsedData.bio || "",
             refreshToken: "",
             avatarUrl: "",
+            availability: "offline",
+            currentSessionId: null,
+            socketId: null,
+            rating: 0,
+            totalSessions: 0,
+            lastOnline: new Date().toISOString(),
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
-        });
+        };
 
-        await generateAndStoreTokensAndSetCookies(res, user);
 
+        if (parsedData.role === "learner") {
+            defaultUserData.topics = parsedData.topic;
+            defaultUserData.skills = [];
+        } else if (parsedData.role === "educator") {
+            defaultUserData.skills = parsedData.topic;
+            defaultUserData.topics = [];
+        }
+
+        const user = await UserModel.createUser(defaultUserData);
+
+        const { accessToken } = await generateAndStoreTokensAndSetCookies(res, user);
         const { password, refreshToken, ...safeUser } = user;
+
         res.status(201).json({
             message: "User registered successfully",
-            user: safeUser
+            user: safeUser,
+            accessToken
         });
 
     } catch (error) {
@@ -65,6 +86,7 @@ export const signUpUser = async (req, res) => {
         res.status(500).json({ message: "Internal server error while signing up." });
     }
 };
+
 
 
 
@@ -202,5 +224,64 @@ export const updatePassword = async (req, res) => {
     } catch (error) {
         console.error("Update password error:", error);
         res.status(500).json({ message: "Internal server error while updating password." });
+    }
+};
+
+
+
+export const updateUserProfileInfo = async (req, res) => {
+    try {
+        const { topics, bio, skills } = req.body;
+
+        if (!topics && !bio && !skills) {
+            return res.status(400).json({ message: "Please provide topics or bio to update" });
+        }
+
+        const updateExpressions = [];
+        const expressionValues = { ":updatedAt": new Date().toISOString() };
+        const expressionNames = {};
+
+        if (topics) {
+            updateExpressions.push("#topics = :topics");
+            expressionValues[":topics"] = topics;
+            expressionNames["#topics"] = "topics";
+        }
+
+        if (bio) {
+            updateExpressions.push("#bio = :bio");
+            expressionValues[":bio"] = bio;
+            expressionNames["#bio"] = "bio";
+        }
+
+
+        if (skills) {
+            updateExpressions.push("#skills = :skills");
+            expressionValues[":skills"] = skills;
+            expressionNames["#skills"] = "skills";
+        }
+
+
+
+        updateExpressions.push("updatedAt = :updatedAt");
+
+        const updateParams = {
+            TableName: process.env.USER_TABLE,
+            Key: { userId: req.user.id },
+            UpdateExpression: `SET ${updateExpressions.join(", ")}`,
+            ExpressionAttributeNames: expressionNames,
+            ExpressionAttributeValues: expressionValues,
+            ReturnValues: "ALL_NEW"
+        };
+
+        const result = await ddbDocClient.send(new UpdateCommand(updateParams));
+
+        return res.status(200).json({
+            message: "Profile updated successfully",
+            user: result.Attributes
+        });
+
+    } catch (error) {
+        console.error("Update profile info error:", error);
+        res.status(500).json({ message: "Internal server error while updating profile info." });
     }
 };

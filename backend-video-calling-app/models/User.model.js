@@ -10,9 +10,7 @@ import { ddbDocClient } from "../database/connectDB.js";
 
 const USER_TABLE = process.env.USER_TABLE;
 
-/**
- * Create a new user
- */
+
 export const createUser = async (user) => {
     const params = {
         TableName: USER_TABLE,
@@ -20,12 +18,21 @@ export const createUser = async (user) => {
             userId: user.userId,
             name: user.name,
             email: user.email,
-            role: user.role || "learner",
+            role: user.role || "learner", // "learner" or "educator"
+            topics: user.topics || [], // for learner
+            skills: user.skills || [], // for educator
+            bio: user.bio || "",
             password: user.password,
             refreshToken: user.refreshToken || null,
+            availability: user.availability || "offline", // "online", "offline", "busy"
+            currentSessionId: user.currentSessionId || null,
+            socketId: user.socketId || null,
             avatarUrl: user.avatarUrl || null,
+            rating: user.rating || 0,
+            totalSessions: user.totalSessions || 0,
             createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
+            lastOnline: new Date().toISOString()
         },
         ConditionExpression: "attribute_not_exists(userId)"
     };
@@ -64,7 +71,7 @@ export const updateUser = async (userId, updates) => {
         }
     }
 
-    // Always update updatedAt timestamp
+
     expAttrNames["#updatedAt"] = "updatedAt";
     expAttrVals[":updatedAt"] = new Date().toISOString();
     updateExp += `${prefix}#updatedAt = :updatedAt`;
@@ -95,9 +102,7 @@ export const deleteUser = async (userId) => {
     return { message: "User deleted successfully" };
 };
 
-/**
- * List users (with optional pagination)
- */
+
 export const listUsers = async (limit = 20, lastKey = null) => {
     const params = {
         TableName: USER_TABLE,
@@ -173,7 +178,7 @@ export const updateUserAvatarInDB = async (userId, avatarUrl) => {
 
 export const updateUserById = async (userId, updateData) => {
     try {
-        
+
         const updateKeys = Object.keys(updateData);
         if (updateKeys.length === 0) {
             throw new Error("No fields to update");

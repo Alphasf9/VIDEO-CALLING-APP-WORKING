@@ -1,10 +1,12 @@
 import express from "express";
 import {
     getUserProfile, loginUser, logoutUser
-    , signUpUser, updatePassword
+    , signUpUser, updatePassword,
+    updateUserProfileInfo
 } from "../controllers/User.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
-import { generateAvatarUploadUrl } from "../controllers/Avatar.controller.js";
+import { generateAvatarUploadUrl, updateAvatar } from "../controllers/Avatar.controller.js";
+import { refreshAccessToken } from "../utils/refreshToken.util.js";
 
 
 
@@ -23,8 +25,12 @@ router.get('/user-profile', authenticate, getUserProfile)
 
 router.post('/user-url', authenticate, generateAvatarUploadUrl)
 
-router.put('update-password', authenticate, updatePassword)
+router.put('/update-password', authenticate, updatePassword)
 
+router.put('/update-user-avatar', authenticate, updateAvatar)
 
+router.post('/refresh-token', refreshAccessToken);
+
+router.patch('/update-user-deatils', authenticate, updateUserProfileInfo)
 
 export default router;

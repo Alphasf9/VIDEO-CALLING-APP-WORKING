@@ -26,6 +26,9 @@ const Lobby = () => {
         setRoom(room);
     }, []);
 
+
+  
+
     useEffect(() => {
         socket.on('join-room', handleJoinRoom);
         return () => {
@@ -33,24 +36,24 @@ const Lobby = () => {
         };
     }, [socket, handleJoinRoom]);
 
-    // Sample user reviews
+   
     const reviews = [
         {
             name: "Dr. Emily Harper",
             role: "Chief Technology Officer",
-            review: "VideoSync delivers unmatched video quality and reliability, transforming our global team meetings into seamless experiences.",
+            review: "Learning Hub delivers unmatched video quality and reliability, transforming our global team meetings into seamless experiences.",
             rating: 5,
         },
         {
             name: "James Patel",
             role: "Project Manager",
-            review: "The intuitive interface and robust performance make VideoSync the perfect tool for coordinating with clients worldwide.",
+            review: "The intuitive interface and robust performance make Learning Hub the perfect tool for coordinating with clients worldwide.",
             rating: 4,
         },
         {
             name: "Sophia Nguyen",
             role: "Educator & Consultant",
-            review: "VideoSync's elegant design and flawless connectivity have elevated my virtual workshops to a professional standard.",
+            review: "Learning Hub's elegant design and flawless connectivity have elevated my virtual workshops to a professional standard.",
             rating: 5,
         },
     ];
@@ -60,7 +63,7 @@ const Lobby = () => {
             {/* Main Card */}
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 md:p-10 border border-gray-100 transform transition-all duration-300 hover:shadow-3xl">
                 <div className="text-center mb-8">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">VideoSync</h1>
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">Learning Hub</h1>
                     <p className="text-gray-500 mt-2 text-base md:text-lg font-medium">
                         Seamless, Professional Video Conferencing
                     </p>
