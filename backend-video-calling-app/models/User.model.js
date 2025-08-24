@@ -212,3 +212,52 @@ export const updateUserById = async (userId, updateData) => {
         throw error;
     }
 };
+
+
+
+
+export async function updateUserAvailability(userId, socketId, status) {
+    try {
+        if (!status) throw new Error("updateUserAvailability: 'status' is required");
+        if (!userId) throw new Error("updateUserAvailability: 'userId' is required");
+
+        const expressionParts = [];
+        const expAttrNames = {};
+        const expAttrVals = {};
+
+       
+        expressionParts.push("#availability = :status");
+        expAttrNames["#availability"] = "availability";
+        expAttrVals[":status"] = status;
+
+       
+        if (socketId !== undefined) {
+            expressionParts.push("#socketId = :socketId");
+            expAttrNames["#socketId"] = "socketId";
+            expAttrVals[":socketId"] = socketId;
+        }
+
+        
+        expressionParts.push("#updatedAt = :updatedAt");
+        expAttrNames["#updatedAt"] = "updatedAt";
+        expAttrVals[":updatedAt"] = new Date().toISOString();
+
+        const params = new UpdateCommand({
+            TableName: USER_TABLE,
+            Key: { userId },
+            UpdateExpression: `SET ${expressionParts.join(", ")}`,
+            ExpressionAttributeNames: expAttrNames,
+            ExpressionAttributeValues: expAttrVals,
+            ReturnValues: "ALL_NEW"
+        });
+
+        const result = await ddbDocClient.send(params);
+        return result.Attributes;
+
+    } catch (err) {
+        console.error("❌ Error updating user availability:", err);
+        throw err;
+    }
+}
+
+

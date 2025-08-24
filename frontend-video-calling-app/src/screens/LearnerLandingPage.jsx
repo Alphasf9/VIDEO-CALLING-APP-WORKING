@@ -31,17 +31,14 @@ const LandingPage = () => {
 
       let { uploadUrl, publicUrl } = data;
 
-      // Ensure publicUrl has https://
       publicUrl = publicUrl.startsWith("http") ? publicUrl : `https://${publicUrl}`;
 
-      // Upload file to S3
       await api.put(uploadUrl, file, {
         headers: { "Content-Type": file.type },
-        baseURL: "", // prevent Axios baseURL from prepending
+        baseURL: "", 
         withCredentials: false,
       });
 
-      // Update user context + localStorage
       const updatedUser = { ...user, avatarUrl: publicUrl };
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
@@ -50,7 +47,6 @@ const LandingPage = () => {
 
 
 
-      // Navigate to learner dashboard after upload
       navigate("/learner/dashboard");
 
     } catch (err) {

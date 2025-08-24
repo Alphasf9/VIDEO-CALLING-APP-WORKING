@@ -8,7 +8,14 @@ import Checkauth from './protected/CheckAuth'
 import LearnerLandingPage from './screens/LearnerLandingPage'
 import LearnerLogin from './screens/LearnerLogin'
 import LearnerDashboard from './screens/LearnerDashboard'
-import Connecting from './screens/Connecting'
+import Connecting from './screens/MatchedEducator'
+import LandingPage from './screens/LearnerLandingPage'
+import HomePage from './screens/LandingPage'
+import EducatorDashboard from './screens/EducatorDashboard'
+import EducatorLogin from './screens/EducatorLogin'
+import CheckAuthForEducator from './protected/CheckAuthForEducator'
+import MatchedLearner from './screens/MatchedLearner'
+import MatchedEducator from './screens/MatchedEducator'
 
 function App() {
 
@@ -17,6 +24,7 @@ function App() {
     <>
       <div className='App'>
         <Routes>
+          <Route path='/' element={<HomePage />} />
           <Route path='/lobby' element={<Lobby />} />
           <Route path='/room/:roomId' element={<Room />} />
           <Route path='/user/signup' element={<LearnerSignup />} />
@@ -35,8 +43,25 @@ function App() {
 
           <Route path="/educator-details"
             element={<Checkauth protectedRoute={true}>
-              <Connecting />
+              <MatchedEducator />
             </Checkauth>} />
+
+
+          <Route path="/educator/dashboard"
+            element={<CheckAuthForEducator protectedRoute={true}>
+              <EducatorDashboard />
+            </CheckAuthForEducator>} />
+
+          <Route path="/educator/login" element={<EducatorLogin />} />
+
+
+          <Route path="/matched/learner"
+            element={<CheckAuthForEducator protectedRoute={true}>
+              <MatchedLearner />
+            </CheckAuthForEducator>} />
+
+
+
         </Routes>
 
 

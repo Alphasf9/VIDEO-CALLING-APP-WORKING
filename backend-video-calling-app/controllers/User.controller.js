@@ -38,7 +38,6 @@ export const signUpUser = async (req, res) => {
         const userId = uuidv4();
         const hashedPassword = await hashPassword(parsedData.password);
 
-        // Default values for new fields
         const defaultUserData = {
             userId,
             email: parsedData.email,
@@ -48,7 +47,7 @@ export const signUpUser = async (req, res) => {
             bio: parsedData.bio || "",
             refreshToken: "",
             avatarUrl: "",
-            availability: "offline",
+            availability: "online",
             currentSessionId: null,
             socketId: null,
             rating: 0,
@@ -106,8 +105,11 @@ export const loginUser = async (req, res) => {
         }
 
         const { accessToken } = await generateAndStoreTokensAndSetCookies(res, userExists);
-
+        
+        
+        
         const { password, refreshToken, ...safeUser } = userExists;
+        
 
         res.status(201).json({
             message: "User logged in successfully",
@@ -129,6 +131,9 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
     try {
+        await UserModel.updateUser(req.user.id, {
+            availability: "offline"
+        });
         await UserModel.clearRefreshToken(req.user.id);
         res.clearCookie("accessToken");
         res.clearCookie("refreshToken");
@@ -148,6 +153,7 @@ export const getUserProfile = async (req, res) => {
     try {
         const { id } = req.user;
 
+
         const params = {
             TableName: process.env.USER_TABLE,
             Key: { userId: id },
@@ -161,6 +167,7 @@ export const getUserProfile = async (req, res) => {
 
         delete result.Item.password;
 
+
         return res.status(200).json({
             message: "User profile fetched successfully",
             user: result.Item
@@ -168,10 +175,14 @@ export const getUserProfile = async (req, res) => {
 
     } catch (error) {
         if (error.name === "ZodError") {
-            return res.status(400).json({ errors: error.errors });
+            return res.status(400).json({
+                errors: error.errors,
+            });
         }
         console.error("Get user profile error:", error);
-        res.status(500).json({ message: "Internal server error while getting user profile." });
+        res.status(500).json({
+            message: "Internal server error while getting user profile."
+        });
     }
 };
 
@@ -285,3 +296,7 @@ export const updateUserProfileInfo = async (req, res) => {
         res.status(500).json({ message: "Internal server error while updating profile info." });
     }
 };
+
+
+
+

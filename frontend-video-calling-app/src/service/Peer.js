@@ -1,36 +1,29 @@
 class PeerService {
     constructor() {
-        if (!this.peer) {
-            this.peer = new RTCPeerConnection({
-                iceServers: [{
-                    urls: [
-                        'stun:stun.l.google.com:19302',
-                        'stun:stun.l.google.com:5349'
-                    ]
-                }]
-            })
-        }
-    };
+        // Each instance gets its own RTCPeerConnection
+        this.peer = new RTCPeerConnection({
+            iceServers: [{ urls: ["stun:stun.l.google.com:19302"] }],
+        });
+    }
+
+    addLocalStream(stream) {
+        stream.getTracks().forEach((track) => this.peer.addTrack(track, stream));
+    }
 
     async getOffer() {
-        if (this.peer) {
-            const offer = await this.peer.createOffer();
-            await this.peer.setLocalDescription(offer);
-            return offer;
-        }
-    };
+        const offer = await this.peer.createOffer();
+        await this.peer.setLocalDescription(offer);
+        return offer;
+    }
 
     async getAnswer(offer) {
-        if (this.peer) {
-            await this.peer.setRemoteDescription(offer);
-            const answer = await this.peer.createAnswer();
-            await this.peer.setLocalDescription(answer);
-            return answer;
-        }
-    };
+        await this.peer.setRemoteDescription(offer);
+        const answer = await this.peer.createAnswer();
+        await this.peer.setLocalDescription(answer);
+        return answer;
+    }
 
-
-    async setLocalDescription(answer) {
+    async setRemoteDescription(answer) {
         await this.peer.setRemoteDescription(answer);
     }
 
@@ -41,7 +34,15 @@ class PeerService {
         };
     }
 
+    onIceCandidate(callback) {
+        this.peer.onicecandidate = (event) => {
+            if (event.candidate) callback(event.candidate);
+        };
+    }
+
+    addIceCandidate(candidate) {
+        return this.peer.addIceCandidate(candidate);
+    }
 }
 
-
-export default new PeerService();
+export default PeerService;

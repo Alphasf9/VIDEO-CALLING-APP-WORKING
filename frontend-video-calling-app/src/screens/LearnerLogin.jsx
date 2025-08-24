@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, {  useState } from "react";
 import { useUser } from "../context/UserContext";
 import api from "../api/AxiosInstance";
 import { useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock } from "react-icons/fa";
+
 
 const LearnerLogin = () => {
   const [form, setForm] = useState({
@@ -11,7 +12,7 @@ const LearnerLogin = () => {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const { saveUserSession,user,setUser } = useUser();
+  const { saveUserSession, setUser } = useUser();
   const navigate = useNavigate();
 
   const learningQuote = "The beautiful thing about learning is that nobody can take it away from you. – B.B. King";
@@ -51,12 +52,13 @@ const LearnerLogin = () => {
     setLoading(true);
     try {
       const response = await api.post("/users/user-login", form);
-
+      
       if (response.status === 201) {
         const { user, accessToken } = response.data;
+
         setUser(response.data.user);
         saveUserSession(user, accessToken);
-        if(user.avatarUrl === null) navigate("/learner/upload-profile-photo");
+        if (user.avatarUrl === null) navigate("/learner/upload-profile-photo");
         navigate("/learner/dashboard");
       }
     } catch (error) {
@@ -66,6 +68,7 @@ const LearnerLogin = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-800 relative overflow-hidden">

@@ -24,3 +24,18 @@ export const authenticate = (req, res, next) => {
         res.status(401).json({ message: "Invalid or expired token" });
     }
 };
+
+export const isEducator = (req, res, next) => {
+    console.log(req.role);
+    if (req.user.role !== "educator") {
+        return res.status(403).json({ message: "Access denied. Only educators allowed." });
+    }
+    next();
+};
+
+export const isLearner = (req, res, next) => {
+    if (req.user.role !== "learner") {
+        return res.status(403).json({ message: "Access denied. Only learners allowed." });
+    }
+    next();
+};
