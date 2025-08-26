@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaUserCircle, FaEdit, FaSignOutAlt, FaBookOpen, FaChartLine, FaRocket, FaCheck, FaTimes } from 'react-icons/fa';
 import { useEducator } from '../context/EducatorContext';
 import { useSocket } from '../context/SocketContext';
-import {useRoom} from '../context/RoomContext';
+import { useRoom } from '../context/RoomContext';
 
 const LearnerDashboard = () => {
   const { user, clearUserSession, setUser } = useUser();
@@ -19,7 +19,7 @@ const LearnerDashboard = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [connectionRequest, setConnectionRequest] = useState(null);
-const {setRoomId}= useRoom();
+  const { setRoomId } = useRoom();
 
 
   const loadingMessages = [
@@ -31,25 +31,63 @@ const {setRoomId}= useRoom();
   ];
 
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleConnect = () => {
+      console.log("Socket connected on learner dashboard:", socket.id);
+
+      // Register user ID with backend immediately
+      if (user?.userId) {
+        socket.emit("register-user", { userId: user.userId });
+      }
+
+      // Attach listener AFTER connection
+      console.log("🟢 Attaching listener for connection request");
+      const handleConnectionRequest = ({ from }) => {
+        console.log("🟢 Connection request received from educator", from);
+        alert(`You have a connection request from educator ${from}`);
+      };
+
+      socket.on("connection-request-by-learner", handleConnectionRequest);
+
+      // Clean up
+      return () => {
+        socket.off("connection-request-by-learner", handleConnectionRequest);
+      };
+    };
+
+    if (socket.connected) {
+      handleConnect();
+    } else {
+      socket.once("connect", handleConnect);
+    }
+  }, [socket, user?.userId]);
+
+
+
 
 
   useEffect(() => {
 
     console.log("I am fired up 🔥🔥")
 
-    socket.on("join-educator-room", ({ educatorId, learnerId, roomId,userId }) => {
+    socket.on("join-educator-room", ({ educatorId, learnerId, roomId, userId }) => {
       console.log("✅ Received educator room invite", { educatorId, learnerId, roomId });
       setRoomId(roomId);
       alert(`You will be redirected to room ${roomId}`);
       setConnectionRequest({ educatorId, learnerId, roomId });
-  navigate("/lobby", { state: { userId } }); // pass learner userId
+      navigate("/lobby", { state: { userId } }); // pass learner userId
       // navigate(`/room/${roomId}`);
     });
 
     // return () => {
     //   socket.off("join-educator-room"); 
     // };
-  }, [navigate, socket,setRoomId]);
+  }, [navigate, socket, setRoomId]);
+
+
+
 
 
 
@@ -64,13 +102,7 @@ const {setRoomId}= useRoom();
     return () => clearInterval(interval);
   }, [isSearching, loadingMessages.length]);
 
-  // socket.on("join-educator-room", ({ educatorId, learnerId, roomId }) => {
-  //   console.log("✅ Received educator room invite", { educatorId, learnerId, room });
-  //   alert(`You will be redirected to room ${roomId}`);
-  //   setConnectionRequest({ educatorId, learnerId, roomId });
-  //   navigate(`/room/${roomId}
-  //     `);
-  // })
+
 
   useEffect(() => {
     if (user && socket) {
@@ -96,6 +128,11 @@ const {setRoomId}= useRoom();
       socket.off("join-educator-room", handler);
     };
   }, [socket]);
+
+
+
+
+
 
 
   const handleAcceptRequest = () => {

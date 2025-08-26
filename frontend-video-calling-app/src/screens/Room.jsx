@@ -1,25 +1,62 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useRef, useEffect } from "react";
 import { useSocket } from "../context/SocketContext";
 import { useParams } from "react-router-dom";
+import api from "../api/AxiosInstance";
+import { useUser } from "../context/UserContext";
+import { useEducator } from "../context/EducatorContext";
 
-const Room = ({ userId }) => {
+const Room = () => {
   const { roomId } = useParams();
   const socket = useSocket();
+  const { user } = useUser();
+  const { educator } = useEducator();
 
   const [localStream, setLocalStream] = useState(null);
-  const [remoteStreams, setRemoteStreams] = useState({}); 
+  const [remoteStreams, setRemoteStreams] = useState({});
+  const [participants, setParticipants] = useState([]);
 
   const localVideoRef = useRef(null);
-  const pcsRef = useRef({}); 
+  const pcsRef = useRef({});
 
   const startLocalStream = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     setLocalStream(stream);
     if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
-    socket.emit("join-room", { room: roomId, email: userId });
-    console.log(`📡 Joined room: ${roomId} as ${userId}`);
+    setParticipants([user.email]);
+
+    socket.emit("join-room", { room: roomId, email: user.email });
+    console.log(`📡 Joined room: ${roomId} as ${user.email}`);
+  };
+
+  const handleSessions = async (finalParticipants) => {
+    try {
+      const response = await api.post("/sessions/create-session", {
+        sessionId: roomId,
+        participants: finalParticipants,
+        status: "active",
+        sessionType: "video",
+        metadata: { startedBy: user.email },
+      });
+
+      console.log("✅ Session created:", response.data.session);
+      window.sessionCreated = true;
+    } catch (error) {
+      console.error("❌ Error creating session:", error.response?.data || error.message);
+    }
+  };
+
+  const endSession = async () => {
+    if (!window.sessionCreated) return;
+    try {
+      await api.patch(`/sessions/${roomId}/end`);
+      console.log("🛑 Session ended:", roomId);
+      window.sessionCreated = false;
+    } catch (error) {
+      console.error("❌ Error ending session:", error.response?.data || error.message);
+    }
   };
 
   const createPeerConnection = (socketId) => {
@@ -46,47 +83,62 @@ const Room = ({ userId }) => {
   };
 
   useEffect(() => {
-    // When a new user joins, existing users are notified
     socket.on("user:joined", async ({ email, id }) => {
       console.log("🟢 User joined:", email, id);
-      const pc = createPeerConnection(id);
 
-      // Create offer to new user
+      setParticipants((prev) => {
+        const updated = prev.includes(email) ? prev : [...prev, email];
+
+        if (updated.length === 2 && educator?.role === "educator" && !window.sessionCreated) {
+          handleSessions(updated);
+        }
+        return updated;
+      });
+
+      const pc = createPeerConnection(id);
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       socket.emit("offer-created", { offer, to: id });
       console.log("📤 Offer sent to", id);
     });
 
-    // New user receives an offer
     socket.on("offer-received", async ({ offer, from }) => {
       const pc = createPeerConnection(from);
       await pc.setRemoteDescription(offer);
+
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
+
       socket.emit("answer-created", { answer, to: from });
       console.log("📤 Answer sent to", from);
     });
 
-    // Existing user receives the answer
     socket.on("answer-received", async ({ answer, from }) => {
       const pc = pcsRef.current[from];
       if (pc) await pc.setRemoteDescription(answer);
       console.log("✅ Answer received from", from);
     });
 
-    // ICE candidate received
     socket.on("ice-candidate", async ({ candidate, from }) => {
       const pc = pcsRef.current[from];
       if (pc) await pc.addIceCandidate(candidate);
       console.log("🧊 ICE candidate received from", from);
     });
 
+    const handleBeforeUnload = () => {
+      endSession();
+      socket.disconnect();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
       socket.off("user:joined");
       socket.off("offer-received");
       socket.off("answer-received");
       socket.off("ice-candidate");
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+
+      endSession();
     };
   }, [socket, localStream]);
 
@@ -102,9 +154,14 @@ const Room = ({ userId }) => {
 
       <div className="grid grid-cols-2 gap-4 mt-6">
         <video playsInline muted autoPlay ref={localVideoRef} className="w-full h-[300px] bg-black" />
-
         {Object.values(remoteStreams).map((stream, idx) => (
-          <video key={idx} playsInline autoPlay ref={(el) => el && (el.srcObject = stream)} className="w-full h-[300px] bg-black" />
+          <video
+            key={idx}
+            playsInline
+            autoPlay
+            ref={(el) => el && (el.srcObject = stream)}
+            className="w-full h-[300px] bg-black"
+          />
         ))}
       </div>
     </div>

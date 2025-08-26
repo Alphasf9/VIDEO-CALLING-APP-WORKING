@@ -3,6 +3,8 @@ import api from "../api/AxiosInstance";
 import { useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { useEducator } from "../context/EducatorContext";
+import { useSocket } from "../context/SocketContext";
+
 
 const EducatorLogin = () => {
     const [form, setForm] = useState({
@@ -13,6 +15,7 @@ const EducatorLogin = () => {
     const [loading, setLoading] = useState(false);
     const { setEducator, saveUserSession } = useEducator();
     const navigate = useNavigate();
+    const socket = useSocket();
 
     const learningQuote = "The beautiful thing about learning is that nobody can take it away from you. – B.B. King";
 
@@ -57,6 +60,10 @@ const EducatorLogin = () => {
                 saveUserSession(user, accessToken);
                 if (user.avatarUrl === null) navigate("/learner/upload-profile-photo");
                 navigate("/educator/dashboard");
+                socket.emit("educator:login", {
+                    educatorId: user.userId,
+                    role: user.role
+                })
             }
         } catch (error) {
             console.error("Login error:", error.message);

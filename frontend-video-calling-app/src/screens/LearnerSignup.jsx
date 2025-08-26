@@ -3,6 +3,7 @@ import { useUser } from "../context/UserContext";
 import api from "../api/AxiosInstance";
 import { useNavigate } from "react-router-dom";
 import { FaUser, FaEnvelope, FaLock, FaBook, FaInfoCircle } from "react-icons/fa";
+import {useSocket } from "../context/SocketContext";
 
 const LearnerSignup = () => {
   const [form, setForm] = useState({
@@ -11,7 +12,7 @@ const LearnerSignup = () => {
     password: "",
     confirmPassword: "",
     role: "",
-    topicsOrSkills: "", // renamed from topic
+    topicsOrSkills: "",
     bio: "",
   });
 
@@ -19,6 +20,12 @@ const LearnerSignup = () => {
   const [loading, setLoading] = useState(false);
   const { saveUserSession } = useUser();
   const navigate = useNavigate();
+  const socket =useSocket();
+  if(!socket) {
+    return("Socket is not defined on Learner Signup");
+  }
+
+
 
   const roleMessages = {
     learner: "Join as a Learner to explore courses and grow your skills!",
@@ -68,13 +75,17 @@ const LearnerSignup = () => {
     try {
       const response = await api.post("/users/user-signup", {
         ...form,
-        topic: form.topicsOrSkills.split(",").map(t => t.trim()), // send as array
+        topic: form.topicsOrSkills.split(",").map(t => t.trim()), 
       });
 
       if (response.status === 201) {
         const { user, accessToken } = response.data;
         saveUserSession(user, accessToken);
         navigate("/learner/upload-profile-photo");
+        socket.emit("user:register",{
+          learnerId:user.userId,
+          role:user.role
+        })
       }
     } catch (error) {
       console.error("Signup error:", error.message);

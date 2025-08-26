@@ -1,11 +1,33 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useEducator } from "../context/EducatorContext";
 import { Star, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useSocket } from "../context/SocketContext";
+import { useUser } from "../context/UserContext";
 
 const MatchedLearner = () => {
     const { educator } = useEducator();
-    const navigate = useNavigate();
+    // console.log(educator)
+    const { user } = useUser();
+   
+
+    const socket = useSocket();
+
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on("connect", () => {
+            console.log("Socket connected:", socket.id);
+        });
+
+        socket.on("connection-request-ack", (data) => {
+            console.log("Server acknowledged connection request:", data);
+        });
+
+        return () => {
+            socket.off("connect");
+            socket.off("connection-request-ack");
+        };
+    }, [socket]);
 
     if (!educator) {
         return (
@@ -16,13 +38,24 @@ const MatchedLearner = () => {
     }
 
     const { bestMatch, topMatches } = educator;
-
-    
     const filteredMatches = topMatches?.filter(
         (m) => m.learnerId !== bestMatch?.learnerId
     );
-
     const displayMatches = bestMatch ? [bestMatch, ...filteredMatches] : filteredMatches;
+
+
+    const handleConnectionToLearner = (learnerId) => {
+        console.log("Connection request sent to learner:", learnerId);
+        if (!socket || !socket.connected) {
+            console.warn("Socket not connected!");
+            return;
+        }
+
+        socket.emit("connection-request-by-educator", {
+            from: user.userId,
+            learnerId
+        });
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -45,7 +78,6 @@ const MatchedLearner = () => {
                                     Top Match Score: {learner.topTopics[0].similarityScore.toFixed(2)}%
                                 </p>
                             )}
-
                             {index === 0 && (
                                 <div className="absolute top-4 right-4 bg-yellow-400 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center space-x-1 animate-bounce">
                                     <Star className="w-4 h-4" />
@@ -61,7 +93,6 @@ const MatchedLearner = () => {
                             </h3>
                             <p className="text-gray-600 mb-2 line-clamp-3">{learner.bio}</p>
 
-                            {/* Last Online */}
                             {learner.lastOnline && (
                                 <p className="text-gray-500 text-sm mb-4">
                                     Last Online: {new Date(learner.lastOnline).toLocaleString()}
@@ -119,13 +150,13 @@ const MatchedLearner = () => {
                             )}
                         </div>
 
-                        {/* View Learner Button */}
+                        {/* Connect Button */}
                         <div className="px-6 pb-6">
                             <button
-                                onClick={() => navigate(`/learner/${learner.learnerId}`)}
+                                onClick={() => handleConnectionToLearner(learner.learnerId)}
                                 className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 flex items-center justify-center space-x-2 group-hover:shadow-xl"
                             >
-                                <span>View Learner</span>
+                                <span>Connect to Learner</span>
                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>
@@ -135,16 +166,10 @@ const MatchedLearner = () => {
 
             <style jsx>{`
         @keyframes spin-slow {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
-        .animate-spin-slow {
-          animation: spin-slow 10s linear infinite;
-        }
+        .animate-spin-slow { animation: spin-slow 10s linear infinite; }
       `}</style>
         </div>
     );

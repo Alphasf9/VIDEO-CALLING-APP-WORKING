@@ -2,19 +2,21 @@ import React from "react";
 import { useEducator } from "../context/EducatorContext";
 import { useUser } from "../context/UserContext";
 import { useSocket } from "../context/SocketContext";
-import { useNavigate } from "react-router-dom";
 import { Loader2, Star, ArrowRight } from "lucide-react";
+
 
 const MatchedEducator = () => {
     const { educator } = useEducator();
     const { user } = useUser();
     const socket = useSocket();
-    const navigate = useNavigate();
+
+   
+
 
     const topEducators = educator?.topMatches || [];
     const bestMatchRaw = educator?.bestMatch;
 
-  
+
     if ((!topEducators.length && !bestMatchRaw) || !educator) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative overflow-hidden">
@@ -53,7 +55,7 @@ const MatchedEducator = () => {
 
     const displayMatches = bestMatch ? [bestMatch, ...filteredMatches] : filteredMatches;
 
-    // Sort by similarityScore
+    
     const sortedEducators = displayMatches.sort(
         (a, b) => b.similarityScore - a.similarityScore
     );

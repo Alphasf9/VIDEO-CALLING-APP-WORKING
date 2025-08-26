@@ -1,8 +1,9 @@
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import { useUser } from "../context/UserContext";
 import api from "../api/AxiosInstance";
 import { useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock } from "react-icons/fa";
+import { useSocket } from "../context/SocketContext";
 
 
 const LearnerLogin = () => {
@@ -14,6 +15,7 @@ const LearnerLogin = () => {
   const [loading, setLoading] = useState(false);
   const { saveUserSession, setUser } = useUser();
   const navigate = useNavigate();
+  const socket = useSocket();
 
   const learningQuote = "The beautiful thing about learning is that nobody can take it away from you. – B.B. King";
 
@@ -52,12 +54,16 @@ const LearnerLogin = () => {
     setLoading(true);
     try {
       const response = await api.post("/users/user-login", form);
-      
+
       if (response.status === 201) {
         const { user, accessToken } = response.data;
 
         setUser(response.data.user);
         saveUserSession(user, accessToken);
+        socket.emit("learner:login", {
+          learnerId: user.userId,
+          role: user.role
+        })
         if (user.avatarUrl === null) navigate("/learner/upload-profile-photo");
         navigate("/learner/dashboard");
       }
