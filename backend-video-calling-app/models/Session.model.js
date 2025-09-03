@@ -16,12 +16,13 @@ export const createSession = async (session) => {
     }
 
     const sessionData = {
-        sessionId: session.sessionId.trim(),
+        sessionId: session.sessionId.trim(), // here this is userId
+        roomId: session.roomId || null,
         participants: session.participants || [],
         status: session.status || "active",
         sessionType: session.sessionType || "video",
         startedAt: session.startedAt || new Date().toISOString(),
-        endedAt: session.endedAt || null,  // default null, will update on session end
+        endedAt: session.endedAt || null, 
         metadata: session.metadata || {},
         updatedAt: new Date().toISOString(),
     };
@@ -71,7 +72,6 @@ export const updateSession = async (sessionId, updates) => {
         }
     }
 
-    // Always update updatedAt
     expAttrNames["#updatedAt"] = "updatedAt";
     expAttrVals[":updatedAt"] = new Date().toISOString();
     updateExp += `${prefix}#updatedAt = :updatedAt`;
@@ -89,10 +89,7 @@ export const updateSession = async (sessionId, updates) => {
     return result.Attributes;
 };
 
-/**
- * List sessions
- * Supports pagination
- */
+
 export const listSessions = async (limit = 20, lastKey = null) => {
     const params = {
         TableName: SESSION_TABLE,
@@ -107,9 +104,7 @@ export const listSessions = async (limit = 20, lastKey = null) => {
     };
 };
 
-/**
- * Delete a session
- */
+
 export const deleteSession = async (sessionId) => {
     const params = {
         TableName: SESSION_TABLE,
@@ -121,9 +116,7 @@ export const deleteSession = async (sessionId) => {
     return { message: `Session ${sessionId} deleted successfully` };
 };
 
-/**
- * Mark session as ended
- */
+
 export const endSession = async (sessionId) => {
     return updateSession(sessionId, {
         status: "ended",

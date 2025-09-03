@@ -1,42 +1,32 @@
-import * as SessionModel from "../models/Session.model.js";
-import { z } from "zod";
-import * as Message from "../models/Message.model.js";
+import * as SessionRequest from "../models/SessionRequest.model.js";
 import { inngest } from "../inngest/client.js";
+import * as SessionModel from "../models/Session.model.js";
 
 
-export const sessionSchema = z.object({
-    sessionId: z.string().min(1, "Session ID is required"),
-    participants: z.array(z.string().min(1, "Participants are required"))
-        .nonempty("At least one participant is required"),
-    status: z.enum(["active", "ended"]).default("active"),
-    startedAt: z.string().default(() => new Date().toISOString()),
-    endedAt: z.string().optional(),
-    sessionType: z.enum(["video", "audio"]).default("video"),
-    metadata: z.record(z.any()).default({}),
-});
 
 
-export const createSession = async (req, res) => {
+
+export const createSessionPeruser = async (req, res) => {
     try {
-      
 
-        const { sessionId, roomId, participants, status, metadata } = req.body;
 
-        if (!sessionId || !roomId || !participants || !Array.isArray(participants) || participants.length === 0) {
+        const { requestId, sessionId, participants, status, metadata } = req.body;
+
+        if (!sessionId || !participants || !Array.isArray(participants) || participants.length === 0) {
             console.log("❌ Invalid session data");
             return res.status(400).json({ message: "Invalid session data" });
         }
 
-        
+
         const session = await SessionModel.createSession({
+            requestId,
             sessionId,
-            roomId,
             participants,
             status: status || "active",
             metadata: metadata || {},
         });
 
-      
+
 
         return res.status(201).json({
             message: "Session created successfully",
@@ -51,13 +41,16 @@ export const createSession = async (req, res) => {
 
 
 
-
-
-export const getSession = async (req, res) => {
+export const getSessionPeruser = async (req, res) => {
     try {
-        const { sessionId } = req.params;
-        const session = await SessionModel.getSession(sessionId);
-        if (!session) return res.status(404).json({ message: "Session not found" });
+        const { requestId } = req.params;
+
+        const session = await SessionRequest.getSession(requestId);
+
+        if (!session) {
+            return res.status(404).json({ message: "Session not found" });
+        }
+
         return res.status(200).json({ session });
     } catch (error) {
         console.error("Error fetching session:", error);
@@ -69,12 +62,14 @@ export const getSession = async (req, res) => {
 
 
 
-export const endSession = async (req, res) => {
+
+
+export const endSessionOfUser = async (req, res) => {
     try {
         const { sessionId } = req.params;
-        const { transcript,speaker,roomId ,requestId} = req.body;
+        const { transcript, speaker, roomId, requestId } = req.body;
 
-        const session = await SessionModel.endSession(sessionId);
+        const session = await SessionRequest.endSession(requestId);
 
         await inngest.send({
             name: "session/end",
@@ -108,5 +103,33 @@ export const addParticipant = async (req, res) => {
         return res.status(500).json({ message: "Error adding participant" });
     }
 };
+
+
+export const getAllSessionsOfUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ message: "UserId is required" });
+        }
+
+        const sessions = await SessionRequest.getSessionsByUser(userId);
+
+        if (!sessions || sessions.length === 0) {
+            return res.status(404).json({ message: "No sessions found for this user" });
+        }
+
+        return res.status(200).json({ sessions });
+    } catch (error) {
+        console.error("❌ Error fetching sessions for user:", error);
+        return res.status(500).json({ message: "Error fetching sessions" });
+    }
+};
+
+
+
+
+
+
 
 

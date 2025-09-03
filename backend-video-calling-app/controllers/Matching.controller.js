@@ -52,7 +52,6 @@ export const matchLearnerToEducator = async (req, res) => {
         for (const topic of topics) {
             const topicEmbedding = await getEmbedding(topic);
 
-            // Calculate similarity for all educators
             const topicMatches = educators.map(edu => {
                 const similarity = cosineSimilarity(topicEmbedding, educatorEmbeddings[edu.userId]);
                 return {
@@ -66,18 +65,15 @@ export const matchLearnerToEducator = async (req, res) => {
                 };
             });
 
-            // Sort descending by similarity
             topicMatches.sort((a, b) => b.similarityScore - a.similarityScore);
 
-            // Add top N matches for display
             const topMatches = topicMatches.slice(0, topN);
             matches.push(...topMatches);
 
-            // Check for best overall match
             if (!bestMatch || topMatches[0].rawScore > bestMatch.rawScore) {
                 const top = topMatches[0];
                 bestMatch = {
-                    subject: topic,          // DynamoDB PK
+                    subject: topic,
                     learnerId,
                     educatorId: top.educatorId,
                     name: top.educatorName,
@@ -92,12 +88,10 @@ export const matchLearnerToEducator = async (req, res) => {
             }
         }
 
-        // Store only the best match
         if (bestMatch) {
             await MatchingModel.createOrUpdateMatch(bestMatch);
         }
 
-        // Sort final display list by similarity
         matches.sort((a, b) => b.similarityScore - a.similarityScore);
 
         return res.status(200).json({ topMatches: matches.slice(0, topN), bestMatch });

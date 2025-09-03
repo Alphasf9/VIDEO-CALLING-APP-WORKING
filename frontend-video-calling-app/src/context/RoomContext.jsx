@@ -9,22 +9,52 @@ const RoomContext = createContext();
 
 
 export const RoomProvider = ({ children }) => {
-    const [roomId, setRoomId] = useState(null);
+    const [roomId, setRoomIdState] = useState([]);
 
     useEffect(() => {
-        const roomId = localStorage.getItem("roomId");
-        if (roomId) {
-            setRoomId(roomId);
+        const savedRoomIds = localStorage.getItem("roomId");
+        if (savedRoomIds) {
+            try {
+                setRoomIdState(JSON.parse(savedRoomIds));
+
+            } catch {
+                setRoomIdState([savedRoomIds])
+            }
         }
     }, []);
 
+    const setRoomId = (id) => {
+        if (!id) return;
+
+        setRoomIdState((prev) => {
+            const updated = [...new Set([...prev, id])];
+            localStorage.setItem("roomId", JSON.stringify(updated));
+            return updated;
+        });
+    };
+
+    const removeRoomId = (id) => {
+        if (!id) return;
+
+        setRoomIdState((prev) => {
+            const updated = prev.filter((room) => room !== id);
+            localStorage.setItem("roomId", JSON.stringify(updated));
+            return updated;
+        });
+    };
+
+    const clearRoomId = () => {
+        localStorage.removeItem("roomId");
+        setRoomIdState([]);
+    };
 
     return (
-        <RoomContext.Provider value={{ roomId, setRoomId }}>
+        <RoomContext.Provider value={{ roomId, setRoomId, removeRoomId, clearRoomId }}>
             {children}
         </RoomContext.Provider>
-    )
-}
+    );
+};
+
 
 
 export const useRoom = () => useContext(RoomContext);

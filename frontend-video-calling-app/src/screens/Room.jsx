@@ -6,16 +6,20 @@ import { useParams } from "react-router-dom";
 import api from "../api/AxiosInstance";
 import { useUser } from "../context/UserContext";
 import { useEducator } from "../context/EducatorContext";
+import MeetingTranscriber from "../components/Transcriber";
 
 const Room = () => {
   const { roomId } = useParams();
   const socket = useSocket();
   const { user } = useUser();
   const { educator } = useEducator();
+  // console.log(user.userId) 
 
   const [localStream, setLocalStream] = useState(null);
   const [remoteStreams, setRemoteStreams] = useState({});
   const [participants, setParticipants] = useState([]);
+  const [meetingActive, setMeetingActive] = useState(false);
+  const [currentTranscript, setCurrentTranscript] = useState("");
 
   const localVideoRef = useRef(null);
   const pcsRef = useRef({});
@@ -26,6 +30,7 @@ const Room = () => {
     if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
     setParticipants([user.email]);
+    setMeetingActive(true);
 
     socket.emit("join-room", { room: roomId, email: user.email });
     console.log(`📡 Joined room: ${roomId} as ${user.email}`);
@@ -34,14 +39,15 @@ const Room = () => {
   const handleSessions = async (finalParticipants) => {
     try {
       const response = await api.post("/sessions/create-session", {
-        sessionId: roomId,
+        sessionId: user.userId,
+        roomId: roomId,
+        userId:user.userId,
         participants: finalParticipants,
         status: "active",
         sessionType: "video",
         metadata: { startedBy: user.email },
       });
-
-      console.log("✅ Session created:", response.data.session);
+      console.log("✅ Session created:", response.data.session, user.email);
       window.sessionCreated = true;
     } catch (error) {
       console.error("❌ Error creating session:", error.response?.data || error.message);
@@ -51,9 +57,18 @@ const Room = () => {
   const endSession = async () => {
     if (!window.sessionCreated) return;
     try {
-      await api.patch(`/sessions/${roomId}/end`);
+      await api.patch(`/sessions/${roomId}/end`, {
+        userId: user.id,
+        transcript: currentTranscript,
+      });
+
+      console.log(currentTranscript);
       console.log("🛑 Session ended:", roomId);
       window.sessionCreated = false;
+      setMeetingActive(false);
+
+      localStream?.getTracks().forEach((track) => track.stop());
+      setLocalStream(null);
     } catch (error) {
       console.error("❌ Error ending session:", error.response?.data || error.message);
     }
@@ -74,9 +89,7 @@ const Room = () => {
     };
 
     pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit("ice-candidate", { candidate: event.candidate, to: socketId });
-      }
+      if (event.candidate) socket.emit("ice-candidate", { candidate: event.candidate, to: socketId });
     };
 
     return pc;
@@ -84,11 +97,8 @@ const Room = () => {
 
   useEffect(() => {
     socket.on("user:joined", async ({ email, id }) => {
-      console.log("🟢 User joined:", email, id);
-
       setParticipants((prev) => {
         const updated = prev.includes(email) ? prev : [...prev, email];
-
         if (updated.length === 2 && educator?.role === "educator" && !window.sessionCreated) {
           handleSessions(updated);
         }
@@ -99,30 +109,24 @@ const Room = () => {
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       socket.emit("offer-created", { offer, to: id });
-      console.log("📤 Offer sent to", id);
     });
 
     socket.on("offer-received", async ({ offer, from }) => {
       const pc = createPeerConnection(from);
       await pc.setRemoteDescription(offer);
-
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
-
       socket.emit("answer-created", { answer, to: from });
-      console.log("📤 Answer sent to", from);
     });
 
     socket.on("answer-received", async ({ answer, from }) => {
       const pc = pcsRef.current[from];
       if (pc) await pc.setRemoteDescription(answer);
-      console.log("✅ Answer received from", from);
     });
 
     socket.on("ice-candidate", async ({ candidate, from }) => {
       const pc = pcsRef.current[from];
       if (pc) await pc.addIceCandidate(candidate);
-      console.log("🧊 ICE candidate received from", from);
     });
 
     const handleBeforeUnload = () => {
@@ -155,15 +159,26 @@ const Room = () => {
       <div className="grid grid-cols-2 gap-4 mt-6">
         <video playsInline muted autoPlay ref={localVideoRef} className="w-full h-[300px] bg-black" />
         {Object.values(remoteStreams).map((stream, idx) => (
-          <video
-            key={idx}
-            playsInline
-            autoPlay
-            ref={(el) => el && (el.srcObject = stream)}
-            className="w-full h-[300px] bg-black"
-          />
+          <video key={idx} playsInline autoPlay ref={(el) => el && (el.srcObject = stream)} className="w-full h-[300px] bg-black" />
         ))}
       </div>
+
+      {meetingActive && (
+        <MeetingTranscriber
+          sessionId={user.userId}
+          userId={user.userId}
+          onTranscriptChange={setCurrentTranscript}
+          speaker={user.name}
+          requestId={user.userId}
+          roomId={roomId}
+        />
+      )}
+
+      {meetingActive && (
+        <button onClick={endSession} className="btn btn-danger px-6 py-2 rounded mt-4">
+          End Meeting
+        </button>
+      )}
     </div>
   );
 };

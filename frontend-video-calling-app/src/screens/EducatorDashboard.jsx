@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEducator } from '../context/EducatorContext';
 import api from '../api/AxiosInstance';
-import { FaUserCircle, FaEdit, FaSignOutAlt, FaBookOpen, FaChartLine, FaRocket, FaUsers, FaVideo, FaStar, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaUserCircle, FaEdit, FaSignOutAlt, FaBookOpen, FaChartLine, FaRocket, FaUsers, FaVideo, FaStar, FaCheck, FaTimes, FaLightbulb, FaQuoteLeft } from 'react-icons/fa';
 import { useSocket } from '../context/SocketContext';
 import { useRoom } from '../context/RoomContext';
+import SessionDetails from './SessionDetails';
+import UserSessions from './UserSessions';
+
 
 const EducatorDashboard = () => {
     const { educator: user, setEducator } = useEducator();
@@ -17,6 +20,7 @@ const EducatorDashboard = () => {
     const [isSearching, setIsSearching] = useState(false);
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
     const [connectionRequest, setConnectionRequest] = useState(null);
+    const [recentRoomId, setRecentRoomId] = useState();
     const { setRoomId } = useRoom();
 
     const searchMessages = [
@@ -26,6 +30,22 @@ const EducatorDashboard = () => {
         'Matching your expertise perfectly...',
         'Preparing your teaching lobby...',
     ];
+
+    const inspirationalQuotes = [
+        { text: "The best teachers are those who show you where to look, but don't tell you what to see.", author: "Alexandra K. Trenfor" },
+        { text: "Education is not the filling of a pail, but the lighting of a fire.", author: "William Butler Yeats" },
+        { text: "Teaching is the greatest act of optimism.", author: "Colleen Wilcox" },
+        { text: "The art of teaching is the art of assisting discovery.", author: "Mark Van Doren" },
+    ];
+
+    const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+
+    useEffect(() => {
+        const quoteInterval = setInterval(() => {
+            setCurrentQuoteIndex((prev) => (prev + 1) % inspirationalQuotes.length);
+        }, 10000);
+        return () => clearInterval(quoteInterval);
+    }, []);
 
     function generateRoomId(length = 8) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -81,17 +101,23 @@ const EducatorDashboard = () => {
         console.log(`Accepted connection request from ${connectionRequest.from}`);
         const room = generateRoomId();
         setRoomId(room);
-  navigate("/lobby", { state: { userId: user.email } }); // pass userId
-        // navigate(`/room/${room}`);
+        navigate("/lobby", { state: { userId: user.email } });
         socket.emit("educator-accepted-room", {
             educatorId: user.userId,
             learnerId: connectionRequest.from,
             roomId: room,
-            userId:user.email
+            userId: user.email
         });
 
         setConnectionRequest(null);
     };
+
+    const realRoomId = localStorage.getItem("roomId");
+    useEffect(() => {
+        if (realRoomId) {
+            setRecentRoomId(realRoomId);
+        }
+    }, [realRoomId]);
 
     const handleRejectRequest = () => {
         console.log(`Rejected connection request from ${connectionRequest.from}`);
@@ -167,7 +193,7 @@ const EducatorDashboard = () => {
                 <FaRocket className="text-6xl mb-6 animate-bounce" />
                 <h2 className="text-3xl font-bold mb-4">Finding Your Perfect Learners...</h2>
                 <p className="text-xl mb-8 animate-fade-in-out">{searchMessages[currentMessageIndex]}</p>
-                <div className="w-64 h-3 bg-white bg-opacity-20 rounded-full overflow-hidden">
+                <div className="w-64 h-2 bg-white bg-opacity-20 rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 animate-progress"></div>
                 </div>
                 <style jsx>{`
@@ -184,7 +210,7 @@ const EducatorDashboard = () => {
                         100% { width: 100%; }
                     }
                     .animate-progress {
-                        animation: progress 3s linear infinite;
+                        animation: progress 2s linear infinite;
                     }
                 `}</style>
             </div>
@@ -192,40 +218,40 @@ const EducatorDashboard = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative overflow-hidden">
-            {/* Particle Background */}
+        <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 relative overflow-hidden">
+            {/* Enhanced Particle Background */}
             <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-10 left-10 w-64 h-64 bg-indigo-200 rounded-full filter blur-3xl opacity-30 animate-blob"></div>
-                <div className="absolute bottom-10 right-10 w-72 h-72 bg-purple-200 rounded-full filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-                <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-200 rounded-full filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+                <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-300 rounded-full filter blur-3xl opacity-20 animate-blob"></div>
+                <div className="absolute bottom-0 right-0 w-112 h-112 bg-purple-300 rounded-full filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+                <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-300 rounded-full filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
             </div>
 
             {/* Connection Request Modal */}
             {connectionRequest && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white bg-opacity-90 backdrop-blur-lg rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 transform animate-fade-in">
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+                    <div className="bg-white bg-opacity-95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 transform animate-fade-in">
                         <h2 className="text-2xl font-extrabold text-gray-800 mb-4 flex items-center space-x-2">
-                            <FaUsers className="text-indigo-600" />
+                            <FaUsers className="text-indigo-600 text-3xl" />
                             <span>New Connection Request</span>
                         </h2>
-                        <p className="text-gray-600 mb-6">
-                            You have received a connection request from <span className="font-bold text-indigo-600">{connectionRequest.from}</span>.
-                            Would you like to accept or reject this request?
+                        <p className="text-gray-600 mb-6 text-lg">
+                            You've received a connection request from Learner <span className="font-bold text-indigo-600">{connectionRequest.from}</span>.
+                            Ready to inspire and teach?
                         </p>
                         <div className="flex justify-end space-x-4">
                             <button
                                 onClick={handleRejectRequest}
-                                className="px-6 py-2 bg-gradient-to-r from-red-500 to-red-700 text-white font-bold rounded-full hover:from-red-600 hover:to-red-800 transition-all duration-300 flex items-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105"
+                                className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-700 text-white font-bold rounded-full hover:from-red-600 hover:to-red-800 transition-all duration-300 flex items-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105"
                             >
                                 <FaTimes />
-                                <span>Reject</span>
+                                <span>Decline</span>
                             </button>
                             <button
                                 onClick={handleAcceptRequest}
-                                className="px-6 py-2 bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold rounded-full hover:from-green-500 hover:to-blue-600 transition-all duration-300 flex items-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105"
+                                className="px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold rounded-full hover:from-green-600 hover:to-blue-600 transition-all duration-300 flex items-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105"
                             >
                                 <FaCheck />
-                                <span>Accept</span>
+                                <span>Accept & Join</span>
                             </button>
                         </div>
                     </div>
@@ -233,24 +259,24 @@ const EducatorDashboard = () => {
             )}
 
             {/* Top Navigation Bar */}
-            <nav className="bg-white bg-opacity-90 backdrop-blur-lg shadow-md p-4 fixed w-full z-20">
+            <nav className="bg-white bg-opacity-95 backdrop-blur-lg shadow-md p-4 fixed w-full z-20">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                        <img src="/logo.png" alt="Platform Logo" className="h-10" />
-                        <h1 className="text-2xl font-bold text-indigo-600">Learning Hub</h1>
+                        <img src="/logo.png" alt="Platform Logo" className="h-12" />
+                        <h1 className="text-3xl font-extrabold text-indigo-700">Learning Hub</h1>
                     </div>
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-6">
                         <div className="relative">
                             <input
                                 type="text"
-                                placeholder="Search learners..."
-                                className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-gray-800 font-bold bg-white bg-opacity-80"
+                                placeholder="Search for learners or topics..."
+                                className="pl-12 pr-6 py-3 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800 font-medium bg-white bg-opacity-80 w-80"
                             />
-                            <FaUsers className="absolute top-3 left-3 text-gray-600" />
+                            <FaUsers className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-500 text-xl" />
                         </div>
                         <div className="relative group">
                             {user?.avatarUrl ? (
-                                <div className={`relative w-12 h-12 rounded-full border-2 ${user.availability === 'online' ? 'border-green-400' : 'border-red-400'} shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer`}>
+                                <div className={`relative w-12 h-12 rounded-full border-2 ${user.availability === 'online' ? 'border-green-500' : 'border-red-500'} shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer`}>
                                     <img
                                         src={user.avatarUrl}
                                         alt="Profile"
@@ -258,29 +284,29 @@ const EducatorDashboard = () => {
                                         onClick={() => navigate('/profile')}
                                     />
                                     <div
-                                        className={`absolute inset-0 rounded-full border-4 ${user.availability === 'online' ? 'border-green-400 animate-aura-online' : 'border-red-400 animate-aura-offline'} opacity-50 group-hover:opacity-75 transition-opacity duration-300`}
+                                        className={`absolute inset-0 rounded-full border-4 ${user.availability === 'online' ? 'border-green-500 animate-aura-online' : 'border-red-500 animate-aura-offline'} opacity-40 group-hover:opacity-70 transition-opacity duration-300`}
                                     ></div>
                                 </div>
                             ) : (
-                                <div className={`relative w-12 h-12 rounded-full border-2 ${user.availability === 'online' ? 'border-green-400' : 'border-red-400'} shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer`}>
+                                <div className={`relative w-12 h-12 rounded-full border-2 ${user.availability === 'online' ? 'border-green-500' : 'border-red-500'} shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer`}>
                                     <FaUserCircle
-                                        className={`text-4xl ${user.availability === 'online' ? 'text-green-600' : 'text-red-600'} hover:scale-105 transition-transform duration-300`}
+                                        className={`text-5xl ${user.availability === 'online' ? 'text-green-600' : 'text-red-600'} hover:scale-105 transition-transform duration-300`}
                                         onClick={() => navigate('/profile')}
                                     />
                                     <div
-                                        className={`absolute inset-0 rounded-full border-4 ${user.availability === 'online' ? 'border-green-400 animate-aura-online' : 'border-red-400 animate-aura-offline'} opacity-50 group-hover:opacity-75 transition-opacity duration-300`}
+                                        className={`absolute inset-0 rounded-full border-4 ${user.availability === 'online' ? 'border-green-500 animate-aura-online' : 'border-red-500 animate-aura-offline'} opacity-40 group-hover:opacity-70 transition-opacity duration-300`}
                                     ></div>
                                 </div>
                             )}
-                            <div className="absolute top-full mt-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2">
-                                {user.availability === 'online' ? 'You are Online' : 'You are Offline'}
+                            <div className="absolute top-full mt-2 hidden group-hover:block bg-gray-800 text-white text-sm rounded-lg py-2 px-4 shadow-lg">
+                                {user.availability === 'online' ? 'Online and Ready to Teach' : 'Offline - Come Back Soon!'}
                             </div>
                         </div>
                         <button
                             onClick={handleLogout}
-                            className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-700 text-white font-bold rounded-full hover:from-red-600 hover:to-red-800 transition-all duration-300 flex items-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105"
+                            className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-800 text-white font-bold rounded-full hover:from-red-700 hover:to-red-900 transition-all duration-300 flex items-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105"
                         >
-                            <FaSignOutAlt />
+                            <FaSignOutAlt className="text-xl" />
                             <span>Logout</span>
                         </button>
                     </div>
@@ -288,74 +314,87 @@ const EducatorDashboard = () => {
             </nav>
 
             {/* Main Content - Modular Grid Layout */}
-            <main className="max-w-7xl mx-auto pt-24 pb-8 px-4 grid grid-cols-1 md:grid-cols-4 gap-6">
+            <main className="max-w-7xl mx-auto pt-32 pb-12 px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
                 {/* Sidebar - Profile Card */}
-                <aside className="md:col-span-1 space-y-6">
-                    <div className="bg-white bg-opacity-90 backdrop-blur-lg rounded-2xl shadow-xl p-6 text-center">
-                        <div className="relative inline-block">
+                <aside className="md:col-span-1 space-y-8">
+                    <div className="bg-white bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-xl p-8 text-center transform hover:scale-105 transition-all duration-300">
+                        <div className="relative inline-block mb-4">
                             {user?.avatarUrl ? (
-                                <div className={`relative w-32 h-32 rounded-full border-4 ${user.availability === 'online' ? 'border-green-400' : 'border-red-400'} shadow-lg hover:shadow-xl transition-all duration-300`}>
+                                <div className={`relative w-32 h-32 rounded-full border-4 ${user.availability === 'online' ? 'border-green-500' : 'border-red-500'} shadow-lg hover:shadow-xl transition-all duration-300`}>
                                     <img
                                         src={user.avatarUrl}
                                         alt={`${user.name}'s profile`}
                                         className="w-full h-full rounded-full object-cover"
                                     />
                                     <div
-                                        className={`absolute inset-0 rounded-full border-8 ${user.availability === 'online' ? 'border-green-400 animate-aura-online' : 'border-red-400 animate-aura-offline'} opacity-50 hover:opacity-75 transition-opacity duration-300`}
+                                        className={`absolute inset-0 rounded-full border-8 ${user.availability === 'online' ? 'border-green-500 animate-aura-online' : 'border-red-500 animate-aura-offline'} opacity-40 hover:opacity-70 transition-opacity duration-300`}
                                     ></div>
                                 </div>
                             ) : (
-                                <div className={`relative w-32 h-32 rounded-full border-4 ${user.availability === 'online' ? 'border-green-400' : 'border-red-400'} shadow-lg hover:shadow-xl transition-all duration-300`}>
-                                    <FaUserCircle className={`text-9xl ${user.availability === 'online' ? 'text-green-600' : 'text-red-600'} mx-auto mb-4`} />
+                                <div className={`relative w-32 h-32 rounded-full border-4 ${user.availability === 'online' ? 'border-green-500' : 'border-red-500'} shadow-lg hover:shadow-xl transition-all duration-300`}>
+                                    <FaUserCircle className={`text-9xl ${user.availability === 'online' ? 'text-green-600' : 'text-red-600'} mx-auto`} />
                                     <div
-                                        className={`absolute inset-0 rounded-full border-8 ${user.availability === 'online' ? 'border-green-400 animate-aura-online' : 'border-red-400 animate-aura-offline'} opacity-50 hover:opacity-75 transition-opacity duration-300`}
+                                        className={`absolute inset-0 rounded-full border-8 ${user.availability === 'online' ? 'border-green-500 animate-aura-online' : 'border-red-500 animate-aura-offline'} opacity-40 hover:opacity-70 transition-opacity duration-300`}
                                     ></div>
                                 </div>
                             )}
-                            <p className={`mt-2 text-sm font-bold animate-fade-in ${user.availability === 'online' ? 'text-green-500' : 'text-red-500'}`}>
+                            <p className={`mt-3 text-sm font-semibold ${user.availability === 'online' ? 'text-green-600' : 'text-red-600'}`}>
                                 {user.availability === 'online' ? 'Online' : 'Offline'}
                             </p>
                         </div>
-                        <h2 className="text-2xl font-extrabold text-gray-800 mt-4">{user?.name || 'Guest'}</h2>
-                        <p className="text-gray-600 capitalize">{user?.role || 'Educator'}</p>
-                        <p className="text-gray-500 mt-2">{user?.email || 'N/A'}</p>
+                        <h2 className="text-3xl font-extrabold text-gray-800">{user?.name || 'Guest'}</h2>
+                        <p className="text-gray-600 text-lg capitalize">{user?.role || 'Educator'}</p>
+                        <p className="text-gray-500 mt-2 text-md">{user?.email || 'N/A'}</p>
                         <button
                             onClick={handleEditProfileClick}
-                            className="mt-4 w-full py-2 bg-gray-300 text-gray-600 rounded-full cursor-not-allowed flex items-center justify-center space-x-2 shadow-md"
+                            className="mt-6 w-full py-3 bg-gray-200 text-gray-700 rounded-full cursor-not-allowed flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition-all duration-300"
                         >
-                            <FaEdit />
-                            <span>Edit Profile</span>
+                            <FaEdit className="text-xl" />
+                            <span className="font-semibold">Edit Profile</span>
                         </button>
-                        <div className="mt-4">
-                            <h3 className="text-lg font-bold text-gray-800 mb-2">Account Stats</h3>
-                            <ul className="space-y-2 text-gray-700">
-                                <li className="flex justify-between text-sm">
+                        <div className="mt-6">
+                            <h3 className="text-xl font-bold text-gray-800 mb-3">Account Insights</h3>
+                            <ul className="space-y-3 text-gray-700">
+                                <li className="flex justify-between text-md">
                                     <span>Created:</span>
-                                    <span>{user?.createdAt ? formatDate(user.createdAt) : 'N/A'}</span>
+                                    <span className="font-medium">{user?.createdAt ? formatDate(user.createdAt) : 'N/A'}</span>
                                 </li>
-                                <li className="flex justify-between text-sm">
+                                <li className="flex justify-between text-md">
                                     <span>Updated:</span>
-                                    <span>{user?.updatedAt ? formatDate(user.updatedAt) : 'N/A'}</span>
+                                    <span className="font-medium">{user?.updatedAt ? formatDate(user.updatedAt) : 'N/A'}</span>
                                 </li>
-                                <li className="flex justify-between text-sm">
+                                <li className="flex justify-between text-md">
                                     <span>User ID:</span>
-                                    <span className="truncate">{user?.userId || 'N/A'}</span>
+                                    <span className="font-medium truncate">{user?.userId || 'N/A'}</span>
                                 </li>
                             </ul>
+                        </div>
+                    </div>
+
+                    {/* Inspirational Quote Section */}
+                    <div className="bg-gradient-to-r from-indigo-100 to-purple-100 bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center space-x-2">
+                            <FaLightbulb className="text-yellow-500 text-2xl" />
+                            <span>Teaching Inspiration</span>
+                        </h3>
+                        <div className="relative">
+                            <FaQuoteLeft className="absolute top-0 left-0 text-indigo-300 text-3xl opacity-50" />
+                            <p className="text-gray-700 italic text-md mb-2 pl-8 pr-4">{inspirationalQuotes[currentQuoteIndex].text}</p>
+                            <p className="text-right text-gray-500 text-sm font-medium">- {inspirationalQuotes[currentQuoteIndex].author}</p>
                         </div>
                     </div>
                 </aside>
 
                 {/* Main Sections */}
-                <div className="md:col-span-3 space-y-6">
-                    {/* Welcome Banner */}
-                    <section className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl shadow-xl p-8 text-center relative overflow-hidden">
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10"></div>
-                        <h1 className="text-4xl font-extrabold mb-4 animate-fade-in">Welcome Back, {user?.name}! 🚀</h1>
-                        <p className="text-lg mb-6">{welcomeMessage}</p>
+                <div className="md:col-span-3 space-y-8">
+                    {/* Enhanced Welcome Banner */}
+                    <section className="bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-3xl shadow-2xl p-10 text-center relative overflow-hidden transform hover:scale-102 transition-all duration-500">
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
+                        <h1 className="text-5xl font-extrabold mb-4 animate-fade-in text-shadow-lg">Welcome Back, {user?.name}! 🚀</h1>
+                        <p className="text-xl mb-8 font-medium">{welcomeMessage}</p>
                         <button
                             onClick={handleSearch}
-                            className="px-8 py-4 bg-gradient-to-r from-green-400 to-blue-500 text-gray-800 font-bold rounded-full hover:from-green-500 hover:to-blue-600 transition-all duration-300 flex items-center justify-center space-x-2 mx-auto shadow-2xl hover:shadow-3xl transform hover:scale-105 animate-pulse"
+                            className="px-10 py-4 bg-gradient-to-r from-green-500 to-blue-500 text-gray-900 font-bold rounded-full hover:from-green-600 hover:to-blue-600 transition-all duration-300 flex items-center justify-center space-x-3 mx-auto shadow-2xl hover:shadow-3xl transform hover:scale-110 animate-pulse"
                         >
                             <FaVideo className="text-2xl" />
                             <span>Find Learners</span>
@@ -363,68 +402,77 @@ const EducatorDashboard = () => {
                     </section>
 
                     {/* Teaching Analytics */}
-                    <section className="bg-white bg-opacity-90 backdrop-blur-lg rounded-2xl shadow-xl p-6">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center space-x-2">
-                            <FaChartLine className="text-indigo-600" />
+                    <section className="bg-white bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-xl p-8 transform hover:scale-102 transition-all duration-300">
+                        <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center space-x-3">
+                            <FaChartLine className="text-indigo-600 text-3xl" />
                             <span>Teaching Analytics</span>
                         </h2>
-                        <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-                            <div className="text-center">
-                                <FaChartLine className="text-4xl text-indigo-600 mb-2 mx-auto" />
-                                <p className="text-gray-600">Hours Taught: 120</p>
-                                <p className="text-gray-600">Learners Reached: 45</p>
-                                <p className="text-gray-600">Sessions Completed: 78</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                            <div className="p-4 bg-gray-50 rounded-xl shadow-sm">
+                                <FaChartLine className="text-3xl text-indigo-600 mb-2 mx-auto" />
+                                <p className="text-gray-700 font-semibold text-md">Hours Taught</p>
+                                <p className="text-2xl font-bold text-indigo-700">120</p>
+                            </div>
+                            <div className="p-4 bg-gray-50 rounded-xl shadow-sm">
+                                <FaUsers className="text-3xl text-indigo-600 mb-2 mx-auto" />
+                                <p className="text-gray-700 font-semibold text-md">Learners Reached</p>
+                                <p className="text-2xl font-bold text-indigo-700">45</p>
+                            </div>
+                            <div className="p-4 bg-gray-50 rounded-xl shadow-sm">
+                                <FaVideo className="text-3xl text-indigo-600 mb-2 mx-auto" />
+                                <p className="text-gray-700 font-semibold text-md">Sessions Completed</p>
+                                <p className="text-2xl font-bold text-indigo-700">78</p>
                             </div>
                         </div>
                     </section>
 
                     {/* Bio Editor */}
-                    <section className="bg-white bg-opacity-90 backdrop-blur-lg rounded-2xl shadow-xl p-6">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center space-x-2">
-                            <FaBookOpen className="text-indigo-600" />
-                            <span>Your Bio</span>
+                    <section className="bg-white bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-xl p-8 transform hover:scale-102 transition-all duration-300">
+                        <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center space-x-3">
+                            <FaBookOpen className="text-indigo-600 text-3xl" />
+                            <span>Your Professional Bio</span>
                         </h2>
                         <textarea
                             value={bioInput}
                             onChange={(e) => setBioInput(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-gray-800 font-bold resize-y min-h-[120px] bg-white bg-opacity-80"
-                            placeholder="Tell us about yourself and your teaching expertise..."
+                            className="w-full border border-gray-200 rounded-xl p-6 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800 font-medium resize-y min-h-[160px] bg-white bg-opacity-80 shadow-inner"
+                            placeholder="Share your teaching expertise, experience, and passions..."
                         />
                         <button
                             onClick={() => updateUserDetails('bio')}
                             disabled={loading}
-                            className="mt-4 px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-full hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 flex items-center space-x-2 shadow-md hover:shadow-lg"
+                            className="mt-6 px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-full hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 flex items-center space-x-3 shadow-md hover:shadow-lg"
                         >
-                            <FaEdit />
+                            <FaEdit className="text-xl" />
                             <span>{loading ? 'Updating...' : 'Update Bio'}</span>
                         </button>
                     </section>
 
                     {/* Topics Editor */}
-                    <section className="bg-white bg-opacity-90 backdrop-blur-lg rounded-2xl shadow-xl p-6">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center space-x-2">
-                            <FaBookOpen className="text-indigo-600" />
+                    <section className="bg-white bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-xl p-8 transform hover:scale-102 transition-all duration-300">
+                        <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center space-x-3">
+                            <FaBookOpen className="text-indigo-600 text-3xl" />
                             <span>Topics You Teach</span>
                         </h2>
                         <input
                             type="text"
                             value={topicsInput}
                             onChange={(e) => setTopicsInput(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-gray-800 font-bold bg-white bg-opacity-80"
-                            placeholder="Enter topics separated by commas, e.g., web development, app development"
+                            className="w-full border border-gray-200 rounded-xl p-6 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800 font-medium bg-white bg-opacity-80 shadow-inner"
+                            placeholder="Enter topics separated by commas, e.g., AI Ethics, Quantum Computing, Sustainable Development"
                         />
                         <button
                             onClick={() => updateUserDetails('topics')}
                             disabled={loading}
-                            className="mt-4 px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-full hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 flex items-center space-x-2 shadow-md hover:shadow-lg"
+                            className="mt-6 px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-full hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 flex items-center space-x-3 shadow-md hover:shadow-lg"
                         >
-                            <FaEdit />
+                            <FaEdit className="text-xl" />
                             <span>{loading ? 'Updating...' : 'Update Topics'}</span>
                         </button>
                         {user?.topics && user.topics.length > 0 && (
-                            <div className="mt-4 flex flex-wrap gap-2">
+                            <div className="mt-6 flex flex-wrap gap-3">
                                 {user.topics.map((topic, index) => (
-                                    <span key={index} className="px-3 py-1 bg-indigo-100 text-indigo-800 font-bold rounded-full text-sm">
+                                    <span key={index} className="px-4 py-2 bg-indigo-100 text-indigo-800 font-semibold rounded-full text-sm shadow-sm">
                                         {topic}
                                     </span>
                                 ))}
@@ -433,30 +481,30 @@ const EducatorDashboard = () => {
                     </section>
 
                     {/* Skills Editor */}
-                    <section className="bg-white bg-opacity-90 backdrop-blur-lg rounded-2xl shadow-xl p-6">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center space-x-2">
-                            <FaBookOpen className="text-indigo-600" />
-                            <span>Your Skills</span>
+                    <section className="bg-white bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-xl p-8 transform hover:scale-102 transition-all duration-300">
+                        <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center space-x-3">
+                            <FaBookOpen className="text-indigo-600 text-3xl" />
+                            <span>Your Expertise & Skills</span>
                         </h2>
                         <input
                             type="text"
                             value={skillsInput}
                             onChange={(e) => setSkillsInput(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-gray-800 font-bold bg-white bg-opacity-80"
-                            placeholder="Enter skills separated by commas, e.g., teaching, mentoring, coding"
+                            className="w-full border border-gray-200 rounded-xl p-6 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800 font-medium bg-white bg-opacity-80 shadow-inner"
+                            placeholder="Enter skills separated by commas, e.g., Leadership, Data Analysis, Public Speaking"
                         />
                         <button
                             onClick={() => updateUserDetails('skills')}
                             disabled={loading}
-                            className="mt-4 px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-full hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 flex items-center space-x-2 shadow-md hover:shadow-lg"
+                            className="mt-6 px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-full hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 flex items-center space-x-3 shadow-md hover:shadow-lg"
                         >
-                            <FaEdit />
+                            <FaEdit className="text-xl" />
                             <span>{loading ? 'Updating...' : 'Update Skills'}</span>
                         </button>
                         {user?.skills && user.skills.length > 0 && (
-                            <div className="mt-4 flex flex-wrap gap-2">
+                            <div className="mt-6 flex flex-wrap gap-3">
                                 {user.skills.map((skill, index) => (
-                                    <span key={index} className="px-3 py-1 bg-indigo-100 text-indigo-800 font-bold rounded-full text-sm">
+                                    <span key={index} className="px-4 py-2 bg-indigo-100 text-indigo-800 font-semibold rounded-full text-sm shadow-sm">
                                         {skill}
                                     </span>
                                 ))}
@@ -465,54 +513,45 @@ const EducatorDashboard = () => {
                     </section>
 
                     {/* Recent Sessions */}
-                    <section className="bg-white bg-opacity-90 backdrop-blur-lg rounded-2xl shadow-xl p-6">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center space-x-2">
-                            <FaVideo className="text-indigo-600" />
-                            <span>Recent Sessions</span>
+                    <section className="bg-white bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-xl p-8 transform hover:scale-102 transition-all duration-300">
+                        <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center space-x-3">
+                            <FaVideo className="text-indigo-600 text-3xl" />
+                            <span>Your Recent Session</span>
                         </h2>
-                        <div className="space-y-4">
-                            <div className="p-4 bg-gray-50 rounded-lg flex justify-between items-center transform hover:-translate-y-1 transition-all duration-300">
-                                <div>
-                                    <h3 className="font-bold text-gray-800">Learner: Priya S.</h3>
-                                    <p className="text-gray-600">Topic: React Basics</p>
-                                    <p className="text-gray-500 text-sm">Date: {formatDate(new Date())}</p>
-                                </div>
-                                <button className="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 flex items-center space-x-2 shadow-md">
-                                    <FaVideo />
-                                    <span>View Session</span>
+                        {recentRoomId ? (
+                            <SessionDetails sessionId={recentRoomId} userId={user.userId} />
+                        ) : (
+                            <div className="text-center py-12">
+                                <FaVideo className="text-5xl text-indigo-300 mb-4 mx-auto" />
+                                <p className="text-xl font-semibold text-gray-700 mb-2">No recent sessions yet.</p>
+                                <p className="text-gray-500 text-md mb-6">Start a new teaching session to inspire and connect with learners!</p>
+                                <button
+                                    onClick={handleSearch}
+                                    className="px-8 py-4 bg-gradient-to-r from-green-500 to-blue-500 text-gray-900 font-bold rounded-full hover:from-green-600 hover:to-blue-600 transition-all duration-300 flex items-center justify-center space-x-3 mx-auto shadow-2xl hover:shadow-3xl transform hover:scale-110"
+                                >
+                                    <FaRocket className="text-2xl" />
+                                    <span>Find Learners</span>
                                 </button>
                             </div>
-                            <div className="p-4 bg-gray-50 rounded-lg flex justify-between items-center transform hover:-translate-y-1 transition-all duration-300">
-                                <div>
-                                    <h3 className="font-bold text-gray-800">Learner: Anil K.</h3>
-                                    <p className="text-gray-600">Topic: Flutter Development</p>
-                                    <p className="text-gray-500 text-sm">Date: {formatDate(new Date(Date.now() - 86400000))}</p>
-                                </div>
-                                <button className="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 flex items-center space-x-2 shadow-md">
-                                    <FaVideo />
-                                    <span>View Session</span>
-                                </button>
-                            </div>
-                        </div>
-                        <button className="mt-4 w-full py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-full hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-md">
-                            View All Sessions
-                        </button>
+                        )}
                     </section>
 
+                    <UserSessions userId={user.userId} recentRoomId={recentRoomId} />
+
                     {/* Community Spotlight */}
-                    <section className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl shadow-xl p-6">
-                        <h2 className="text-2xl font-bold mb-4 flex items-center space-x-2">
-                            <FaStar className="text-yellow-400" />
+                    <section className="bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-3xl shadow-2xl p-8 transform hover:scale-102 transition-all duration-500">
+                        <h2 className="text-3xl font-bold mb-6 flex items-center space-x-3">
+                            <FaStar className="text-yellow-400 text-3xl" />
                             <span>Community Spotlight</span>
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="p-4 bg-white bg-opacity-20 rounded-lg transform hover:-translate-y-1 transition-all duration-300">
-                                <p className="text-lg italic">"Your React course changed my career!"</p>
-                                <p className="text-sm font-bold mt-2">– Priya S., Learner</p>
+                            <div className="p-6 bg-white bg-opacity-20 rounded-xl shadow-sm transform hover:-translate-y-1 transition-all duration-300">
+                                <p className="text-md italic">"Your React course transformed my students' careers!"</p>
+                                <p className="text-sm font-semibold mt-2 text-yellow-200">– Priya S., Learner</p>
                             </div>
-                            <div className="p-4 bg-white bg-opacity-20 rounded-lg transform hover:-translate-y-1 transition-all duration-300">
-                                <p className="text-lg italic">"The best platform to connect with students!"</p>
-                                <p className="text-sm font-bold mt-2">– Dr. Rajesh K., Educator</p>
+                            <div className="p-6 bg-white bg-opacity-20 rounded-xl shadow-sm transform hover:-translate-y-1 transition-all duration-300">
+                                <p className="text-md italic">"This platform makes connecting with learners seamless and rewarding!"</p>
+                                <p className="text-sm font-semibold mt-2 text-yellow-200">– Dr. Rajesh K., Educator</p>
                             </div>
                         </div>
                     </section>
@@ -520,11 +559,11 @@ const EducatorDashboard = () => {
             </main>
 
             {/* Footer */}
-            <footer className="bg-white bg-opacity-90 backdrop-blur-lg shadow-md p-4 text-center text-gray-500 text-sm">
+            <footer className="bg-white bg-opacity-95 backdrop-blur-lg shadow-md p-6 text-center text-gray-500 text-md">
                 <p>© 2025 Learning Hub. All rights reserved.</p>
-                <p className="mt-2">
-                    Made with ❤️ by{' '}
-                    <a href="mailto:developerhaseeb1234@gmail.com" className="text-indigo-600 font-bold hover:underline">
+                <p className="mt-3">
+                    Crafted with passion by{' '}
+                    <a href="mailto:developerhaseeb1234@gmail.com" className="text-indigo-700 font-semibold hover:underline">
                         Mohd Haseeb Ali
                     </a>
                 </p>
@@ -533,12 +572,12 @@ const EducatorDashboard = () => {
             <style jsx>{`
                 @keyframes blob {
                     0% { transform: translate(0px, 0px) scale(1); }
-                    33% { transform: translate(30px, -50px) scale(1.1); }
-                    66% { transform: translate(-20px, 20px) scale(0.9); }
+                    33% { transform: translate(30px, -50px) scale(1.2); }
+                    66% { transform: translate(-20px, 20px) scale(0.8); }
                     100% { transform: translate(0px, 0px) scale(1); }
                 }
                 .animate-blob {
-                    animation: blob 7s infinite;
+                    animation: blob 8s infinite;
                 }
                 .animation-delay-2000 {
                     animation-delay: 2s;
@@ -547,43 +586,38 @@ const EducatorDashboard = () => {
                     animation-delay: 4s;
                 }
                 @keyframes aura-online {
-                    0% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.7), 0 0 20px rgba(59, 130, 246, 0.5); }
-                    50% { box-shadow: 0 0 20px rgba(34, 197, 94, 1), 0 0 30px rgba(59, 130, 246, 0.7); }
-                    100% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.7), 0 0 20px rgba(59, 130, 246, 0.5); }
+                    0% { box-shadow: 0 0 12px rgba(34, 197, 94, 0.8), 0 0 24px rgba(59, 130, 246, 0.6); }
+                    50% { box-shadow: 0 0 24px rgba(34, 197, 94, 1), 0 0 36px rgba(59, 130, 246, 0.8); }
+                    100% { box-shadow: 0 0 12px rgba(34, 197, 94, 0.8), 0 0 24px rgba(59, 130, 246, 0.6); }
                 }
                 .animate-aura-online {
-                    animation: aura-online 2s infinite;
+                    animation: aura-online 2.5s infinite;
                 }
                 @keyframes aura-offline {
-                    0% { box-shadow: 0 0 10px rgba(107, 114, 128, 0.7), 0 0 20px rgba(239, 68, 68, 0.5); }
-                    50% { box-shadow: 0 0 20px rgba(107, 114, 128, 1), 0 0 30px rgba(239, 68, 68, 0.7); }
-                    100% { box-shadow: 0 0 10px rgba(107, 114, 128, 0.7), 0 0 20px rgba(239, 68, 68, 0.5); }
+                    0% { box-shadow: 0 0 12px rgba(107, 114, 128, 0.8), 0 0 24px rgba(239, 68, 68, 0.6); }
+                    50% { box-shadow: 0 0 24px rgba(107, 114, 128, 1), 0 0 36px rgba(239, 68, 68, 0.8); }
+                    100% { box-shadow: 0 0 12px rgba(107, 114, 128, 0.8), 0 0 24px rgba(239, 68, 68, 0.6); }
                 }
                 .animate-aura-offline {
-                    animation: aura-offline 2s infinite;
+                    animation: aura-offline 2.5s infinite;
                 }
                 @keyframes fade-in {
                     0% { opacity: 0; transform: translateY(20px); }
                     100% { opacity: 1; transform: translateY(0); }
                 }
                 .animate-fade-in {
-                    animation: fade-in 0.5s ease-out;
+                    animation: fade-in 0.8s ease-out;
                 }
                 @keyframes pulse {
-                    0% { transform: scale(1); }
-                    50% { transform: scale(1.05); }
-                    100% { transform: scale(1); }
+                    0% { transform: scale(1); opacity: 1; }
+                    50% { transform: scale(1.05); opacity: 0.9; }
+                    100% { transform: scale(1); opacity: 1; }
                 }
                 .animate-pulse {
-                    animation: pulse 2s infinite;
+                    animation: pulse 2.5s infinite;
                 }
-                @keyframes bounce {
-                    0% { transform: translateY(0); }
-                    50% { transform: translateY(-10px); }
-                    100% { transform: translateY(0); }
-                }
-                .animate-bounce {
-                    animation: bounce 1s infinite;
+                .text-shadow-lg {
+                    text-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
                 }
             `}</style>
         </div>

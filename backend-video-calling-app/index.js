@@ -10,7 +10,13 @@ import morgan from "morgan";
 import userRoutes from "./routes/User.routes.js";
 import matchRoutes from "./routes/Match.routes.js";
 import sessionRoutes from "./routes/Session.routes.js";
+import transcriptionRoutes from "./routes/Transcription.routes.js";
+import sessionRequestPerUser from "./routes/Sessionrequest.routes.js";
 import { updateUserAvailability } from "./models/User.model.js";
+import { inngest } from './inngest/client.js'
+import { serve } from "inngest/express";
+import { onSessionEnd } from "./inngest/functions/onSessionEnd.js";
+
 
 const app = express();
 
@@ -67,7 +73,7 @@ io.on("connection", (socket) => {
     socket.on("register:user", ({ userId }) => {
         console.log(`User Signup:- User ID: ${userId} has socket ${socket.id}`);
         educatorIdToSocketIdMap.set(userId, socket.id);
-        
+
     });
 
     socket.on("join-room", ({ email, room }) => {
@@ -146,7 +152,12 @@ io.on("connection", (socket) => {
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/matches', matchRoutes);
 app.use('/api/v1/sessions', sessionRoutes);
-
+app.use('/api/v1/session-requests', sessionRequestPerUser);
+app.use('/api/v1/transcriptions', transcriptionRoutes);
+app.use('/api/v1/inngest', serve({
+    client: inngest,
+    functions: [onSessionEnd]
+}))
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));

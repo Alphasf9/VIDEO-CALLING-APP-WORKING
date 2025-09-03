@@ -15,7 +15,10 @@ const Lobby = () => {
     const [showErrorModal, setShowErrorModal] = useState(false);
 
     const email = user?.email || educator?.email || "";
-    const room = contextRoomId || "";
+    const room = Array.isArray(contextRoomId) && contextRoomId.length > 0
+        ? contextRoomId[contextRoomId.length - 1]
+        : "";
+
 
     const handleJoinCall = useCallback(() => {
         if (!email || !room) {
