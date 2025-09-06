@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaRocket, FaBookOpen, FaUsers, FaStar, FaVideo, FaSignOutAlt, FaQuestionCircle } from 'react-icons/fa';
+import { FaRocket, FaBookOpen, FaUsers, FaStar, FaVideo, FaSignOutAlt, FaQuestionCircle, FaEnvelope, FaTwitter, FaGithub, FaLinkedin } from 'react-icons/fa';
 import { useUser } from '../context/UserContext';
 import api from '../api/AxiosInstance';
+import CookieConsent from '../components/Cookie';
+import PricingCard from '../components/PricingCard';
 
 const HomePage = () => {
     const { user, clearUserSession } = useUser();
@@ -32,9 +34,38 @@ const HomePage = () => {
     ];
 
     const faqs = [
-        { question: "How does Learning Hub work?", answer: "Our platform connects learners with educators through AI-driven matching and live video calls." },
-        { question: "Is the video call feature secure?", answer: "Yes, our Omegle-like video calls use WebRTC with end-to-end encryption for secure communication." },
-        { question: "Can I join as both a learner and educator?", answer: "Absolutely! You can switch roles anytime via your profile settings." },
+        {
+            question: "How does Learning Hub work?",
+            answer: "Learning Hub connects learners with qualified educators through AI-powered matching. Once matched, learners can book sessions, join live video calls, and access personalized resources designed to accelerate their learning journey."
+        },
+        {
+            question: "Is the video call feature secure?",
+            answer: "Yes. All video sessions on Learning Hub are powered by WebRTC with end-to-end encryption. This ensures that your conversations remain private, secure, and accessible only to you and your educator."
+        },
+        {
+            question: "Can I join as both a learner and an educator?",
+            answer: "Absolutely. Learning Hub is designed to be flexible—you can register as a learner, educator, or even switch between roles anytime through your profile settings."
+        },
+        {
+            question: "What subjects or skills can I learn on Learning Hub?",
+            answer: "We support a wide range of subjects including academics, professional skills, coding, arts, music, and more. Our educator base continues to grow, so you’ll always find experts for your interests."
+        },
+        {
+            question: "How are educators verified?",
+            answer: "All educators undergo a strict verification process that includes identity checks, skill validation, and peer reviews. This ensures only high-quality and trustworthy educators are available on the platform."
+        },
+        {
+            question: "Do I need to install any software for video calls?",
+            answer: "No installation is required. Learning Hub runs entirely in your browser with lightweight, secure video calling technology. You just need a stable internet connection and a webcam or microphone."
+        },
+        {
+            question: "What happens if I face technical issues during a session?",
+            answer: "Our support team is available 24/7 to assist you. If technical issues disrupt your session, we offer session credits or rescheduling options to ensure you never lose value."
+        },
+        {
+            question: "How do payments and refunds work?",
+            answer: "Payments are handled securely through trusted gateways. If an educator fails to deliver a session as promised, learners are eligible for full or partial refunds under our satisfaction guarantee policy."
+        }
     ];
 
     useEffect(() => {
@@ -78,6 +109,8 @@ const HomePage = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative overflow-hidden">
+
+            <CookieConsent />
             {/* Particle Background */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-10 left-10 w-64 h-64 bg-indigo-200 rounded-full filter blur-3xl opacity-30 animate-blob"></div>
@@ -89,7 +122,9 @@ const HomePage = () => {
             <header className="bg-white shadow-md p-4 fixed w-full z-20">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                        <img src="https://videos.openai.com/vg-assets/assets%2Ftask_01k35xwt04fec9qta7pjc3ychh%2F1755767069_img_1.webp?st=2025-08-21T07%3A19%3A14Z&se=2025-08-27T08%3A19%3A14Z&sks=b&skt=2025-08-21T07%3A19%3A14Z&ske=2025-08-27T08%3A19%3A14Z&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skoid=fea36edb-a052-425e-a84a-436fdce0a7b4&skv=2019-02-02&sv=2018-11-09&sr=b&sp=r&spr=https%2Chttp&sig=FfLuK5WdSHyeGabnDDru9h6Q2n5%2BIqvgJl%2FeaDvM4nI%3D&az=oaivgprodscus" alt="Learning Hub Logo" className="h-12" />
+                        <img src="/logo2.png" alt="Platform Logo"
+                             className="h-12 w-12 object-contain rounded-full bg-white p-2 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                        />
                         <h1 className="text-2xl font-bold text-indigo-600">Learning Hub</h1>
                     </div>
                     <div className="flex items-center space-x-4">
@@ -295,60 +330,107 @@ const HomePage = () => {
                 </div>
             </section>
 
+            <PricingCard />
+
             {/* Footer */}
-            <footer className="bg-white shadow-md p-4 text-center text-gray-500 text-sm">
-                <p>© 2025 Learning Hub. All rights reserved.</p>
-                <p className="mt-2">
-                    Made with ❤️ by{' '}
-                    <a
-                        href="mailto:developerhaseeb1234@gmail.com"
-                        className="text-indigo-600 font-bold hover:underline"
-                    >
-                        Mohd Haseeb Ali
-                    </a>
+            <footer className="bg-gradient-to-r from-indigo-700 to-purple-700 text-white p-8 relative overflow-hidden">
+                {/* Background overlay */}
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
+
+                <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left relative">
+                    {/* About Section */}
+                    <div>
+                        <h3 className="text-xl font-bold mb-4">Learning Hub</h3>
+                        <p className="text-sm">Empowering education through technology since 2025</p>
+                    </div>
+
+                    {/* Quick Links */}
+                    <div>
+                        <h3 className="text-xl font-bold mb-4">Quick Links</h3>
+                        <ul className="space-y-2 text-sm">
+                            <li>
+                                <a href="/" className="hover:text-yellow-400 transition-colors cursor-pointer">
+                                    About Us
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/" className="hover:text-yellow-400 transition-colors cursor-pointer">
+                                    Privacy Policy
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/" className="hover:text-yellow-400 transition-colors cursor-pointer">
+                                    Terms of Service
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/" className="hover:text-yellow-400 transition-colors cursor-pointer">
+                                    Contact Support
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {/* Social Links */}
+                    <div>
+                        <h3 className="text-xl font-bold mb-4">Connect With Us</h3>
+                        <div className="flex justify-center md:justify-start space-x-4">
+                            <a href="https://x.com/Alphasf9" target="_blank" rel="noopener noreferrer" className="text-2xl hover:text-yellow-400 transition-colors cursor-pointer">
+                                <FaTwitter />
+                            </a>
+                            <a href="https://github.com/Alphasf9" target="_blank" rel="noopener noreferrer" className="text-2xl hover:text-yellow-400 transition-colors cursor-pointer">
+                                <FaGithub />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <p className="mt-8 text-center text-sm opacity-75 relative">
+                    © {new Date().getFullYear()} Learning Hub. All rights reserved.
                 </p>
             </footer>
 
+
             <style jsx>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-        @keyframes fade-in {
-          0% { opacity: 0; transform: translateY(20px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 1s ease-out;
-        }
-        @keyframes fade-in-out {
-          0% { opacity: 0; }
-          50% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-        .animate-fade-in-out {
-          animation: fade-in-out 4s infinite;
-        }
-        @keyframes pulse {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-          100% { transform: scale(1); }
-        }
-        .animate-pulse {
-          animation: pulse 2s infinite;
-        }
-      `}</style>
+                @keyframes blob {
+                    0% { transform: translate(0px, 0px) scale(1); }
+                    33% { transform: translate(30px, -50px) scale(1.1); }
+                    66% { transform: translate(-20px, 20px) scale(0.9); }
+                    100% { transform: translate(0px, 0px) scale(1); }
+                }
+                .animate-blob {
+                    animation: blob 7s infinite;
+                }
+                .animation-delay-2000 {
+                    animation-delay: 2s;
+                }
+                .animation-delay-4000 {
+                    animation-delay: 4s;
+                }
+                @keyframes fade-in {
+                    0% { opacity: 0; transform: translateY(20px); }
+                    100% { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-in {
+                    animation: fade-in 1s ease-out;
+                }
+                @keyframes fade-in-out {
+                    0% { opacity: 0; }
+                    50% { opacity: 1; }
+                    100% { opacity: 0; }
+                }
+                .animate-fade-in-out {
+                    animation: fade-in-out 4s infinite;
+                }
+                @keyframes pulse {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.05); }
+                    100% { transform: scale(1); }
+                }
+                .animate-pulse {
+                    animation: pulse 2s infinite;
+                }
+            `}</style>
         </div>
     );
 };

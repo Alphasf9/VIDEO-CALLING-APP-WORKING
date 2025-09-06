@@ -5,7 +5,7 @@ import { comparePassword, hashPassword } from '../utils/password.util.js';
 import { generateAndStoreTokensAndSetCookies } from '../utils/token.util.js';
 import { GetCommand } from "@aws-sdk/lib-dynamodb";
 import { ddbDocClient } from '../database/connectDB.js';
-import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { UpdateCommand ,ScanCommand} from "@aws-sdk/lib-dynamodb";
 
 
 
@@ -49,6 +49,9 @@ export const signUpUser = async (req, res) => {
             avatarUrl: "",
             availability: "online",
             currentSessionId: null,
+            premiumPlan: null,
+            premiumExpiresAt: null,
+            isPremium: false,
             socketId: null,
             rating: 0,
             totalSessions: 0,
@@ -105,11 +108,11 @@ export const loginUser = async (req, res) => {
         }
 
         const { accessToken } = await generateAndStoreTokensAndSetCookies(res, userExists);
-        
-        
-        
+
+
+
         const { password, refreshToken, ...safeUser } = userExists;
-        
+
 
         res.status(201).json({
             message: "User logged in successfully",
@@ -189,37 +192,39 @@ export const getUserProfile = async (req, res) => {
 
 
 
+
 export const updatePassword = async (req, res) => {
     try {
-        const { oldPassword, newPassword } = req.body;
+        const { email, newPassword } = req.body;
 
-        if (!oldPassword || !newPassword) {
-            return res.status(400).json({ message: "Old and new passwords are required" });
+        if (!email || !newPassword) {
+            return res.status(400).json({ message: "Email and new password are required" });
         }
 
-        if (newPassword.length < 8) {
-            return res.status(400).json({ message: "Password must be at least 8 characters long" });
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters long" });
         }
 
-        const params = {
+        
+        const scanParams = {
             TableName: process.env.USER_TABLE,
-            Key: { userId: req.user.id }
+            FilterExpression: "#email = :email",
+            ExpressionAttributeNames: { "#email": "email" },
+            ExpressionAttributeValues: { ":email": email }
         };
-        const { Item: user } = await ddbDocClient.send(new GetCommand(params));
+
+        const result = await ddbDocClient.send(new ScanCommand(scanParams));
+        const user = result.Items && result.Items[0];
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        const isPasswordValid = await comparePassword(oldPassword, user.password);
-        if (!isPasswordValid) {
-            return res.status(400).json({ message: "Old password is incorrect" });
-        }
-
         const hashedPassword = await hashPassword(newPassword);
+
         const updateParams = {
             TableName: process.env.USER_TABLE,
-            Key: { userId: req.user.id },
+            Key: { userId: user.userId }, 
             UpdateExpression: "SET #password = :password, updatedAt = :updatedAt",
             ExpressionAttributeNames: { "#password": "password" },
             ExpressionAttributeValues: {
@@ -228,16 +233,15 @@ export const updatePassword = async (req, res) => {
             },
             ReturnValues: "UPDATED_NEW"
         };
+
         await ddbDocClient.send(new UpdateCommand(updateParams));
 
-        return res.status(200).json({ message: "Password updated successfully" });
-
+        return res.status(200).json({ message: "Password reset successfully" });
     } catch (error) {
-        console.error("Update password error:", error);
-        res.status(500).json({ message: "Internal server error while updating password." });
+        console.error("❌ Reset password error:", error);
+        res.status(500).json({ message: "Internal server error while resetting password." });
     }
 };
-
 
 
 export const updateUserProfileInfo = async (req, res) => {
@@ -299,4 +303,43 @@ export const updateUserProfileInfo = async (req, res) => {
 
 
 
+
+export const getAllEducators = async (req, res) => {
+    try {
+
+        const searchQuery = req.query.search || " ";
+        const educators = await UserModel.searchEducators(searchQuery);
+
+        if (!educators || educators.length === 0) {
+            return res.status(404).json({ message: "No educators found" });
+        }
+
+        return res.status(200).json({ educators });
+    } catch (error) {
+        console.error("Get all educators error:", error);
+        res.status(500).json({ message: "Internal server error while getting educators." });
+    }
+}
+
+
+export const getAllLearner = async (req, res) => {
+    try {
+        const searchQuery = req.query.search || " ";
+
+        const learners = await UserModel.getAllLearners(searchQuery);
+
+        if (!learners || learners.length === 0) {
+            return res.status(404).json({ message: "No learners found" });
+        }
+
+        return res.status(200).json({ learners });
+    } catch (error) {
+        console.error("Get all learners error:", error);
+        res.status(500).json({ message: "Internal server error while getting learners." });
+    }
+}
+
+
+
+// export const rateEd
 

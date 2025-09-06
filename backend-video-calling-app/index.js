@@ -12,6 +12,7 @@ import matchRoutes from "./routes/Match.routes.js";
 import sessionRoutes from "./routes/Session.routes.js";
 import transcriptionRoutes from "./routes/Transcription.routes.js";
 import sessionRequestPerUser from "./routes/Sessionrequest.routes.js";
+import paymentRoutes from "./routes/Payment.routes.js";
 import { updateUserAvailability } from "./models/User.model.js";
 import { inngest } from './inngest/client.js'
 import { serve } from "inngest/express";
@@ -154,6 +155,7 @@ app.use('/api/v1/matches', matchRoutes);
 app.use('/api/v1/sessions', sessionRoutes);
 app.use('/api/v1/session-requests', sessionRequestPerUser);
 app.use('/api/v1/transcriptions', transcriptionRoutes);
+app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/inngest', serve({
     client: inngest,
     functions: [onSessionEnd]

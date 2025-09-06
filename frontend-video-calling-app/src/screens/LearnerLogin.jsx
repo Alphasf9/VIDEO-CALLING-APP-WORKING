@@ -4,6 +4,7 @@ import api from "../api/AxiosInstance";
 import { useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { useSocket } from "../context/SocketContext";
+import CookieConsent from '../components/Cookie';
 
 
 const LearnerLogin = () => {
@@ -62,8 +63,8 @@ const LearnerLogin = () => {
         saveUserSession(user, accessToken);
         socket.emit("learner:login", {
           learnerId: user.userId,
-          role: user.role
-        })
+          role: user.role,
+        });
         if (user.avatarUrl === null) navigate("/learner/upload-profile-photo");
         navigate("/learner/dashboard");
       }
@@ -75,9 +76,10 @@ const LearnerLogin = () => {
     }
   };
 
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-800 relative overflow-hidden">
+
+      <CookieConsent />
       {/* Animated background elements */}
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-15 animate-pulse"></div>
       <div className="absolute w-[700px] h-[700px] bg-indigo-600 rounded-full filter blur-3xl opacity-25 animate-blob top-[-10%] left-[-10%]"></div>
@@ -110,7 +112,8 @@ const LearnerLogin = () => {
               placeholder="Email Address"
               value={form.email}
               onChange={handleChange}
-              className={`pl-12 pr-4 py-3.5 w-full rounded-xl border ${errors.email ? "border-red-400" : "border-gray-200"} bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all duration-300 text-gray-800 placeholder-gray-400 font-medium shadow-sm group-hover:shadow-md`}
+              className={`pl-12 pr-4 py-3.5 w-full rounded-xl border ${errors.email ? "border-red-400" : "border-gray-200"
+                } bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all duration-300 text-gray-800 placeholder-gray-400 font-medium shadow-sm group-hover:shadow-md`}
               required
             />
             {errors.email && <p className="text-red-500 text-xs mt-1.5 font-semibold">{errors.email}</p>}
@@ -125,17 +128,27 @@ const LearnerLogin = () => {
               placeholder="Password"
               value={form.password}
               onChange={handleChange}
-              className={`pl-12 pr-4 py-3.5 w-full rounded-xl border ${errors.password ? "border-red-400" : "border-gray-200"} bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all duration-300 text-gray-800 placeholder-gray-400 font-medium shadow-sm group-hover:shadow-md`}
+              className={`pl-12 pr-4 py-3.5 w-full rounded-xl border ${errors.password ? "border-red-400" : "border-gray-200"
+                } bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all duration-300 text-gray-800 placeholder-gray-400 font-medium shadow-sm group-hover:shadow-md`}
               required
             />
             {errors.password && <p className="text-red-500 text-xs mt-1.5 font-semibold">{errors.password}</p>}
+            <div className="text-right mt-2">
+              <a
+                href="/forgot-password"
+                className="text-indigo-600 hover:text-indigo-800 text-sm font-semibold transition-colors duration-300"
+              >
+                Forgot Password?
+              </a>
+            </div>
           </div>
 
           {/* Submit Button with Loading Animation */}
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 shadow-lg flex items-center justify-center ${loading ? "opacity-60 cursor-not-allowed" : ""}`}
+            className={`w-full py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 shadow-lg flex items-center justify-center ${loading ? "opacity-60 cursor-not-allowed" : ""
+              }`}
           >
             {loading ? (
               <span className="loading loading-ball loading-xl text-white"></span>
@@ -154,25 +167,25 @@ const LearnerLogin = () => {
       </div>
 
       <style jsx>{`
-        @keyframes blob {
-          0% { transform: scale(1); opacity: 0.25; }
-          50% { transform: scale(1.15); opacity: 0.35; }
-          100% { transform: scale(1); opacity: 0.25; }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-3000 {
-          animation-delay: 3s;
-        }
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-in-out;
-        }
-      `}</style>
+                @keyframes blob {
+                    0% { transform: scale(1); opacity: 0.25; }
+                    50% { transform: scale(1.15); opacity: 0.35; }
+                    100% { transform: scale(1); opacity: 0.25; }
+                }
+                .animate-blob {
+                    animation: blob 7s infinite;
+                }
+                .animation-delay-3000 {
+                    animation-delay: 3s;
+                }
+                @keyframes fade-in {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-in {
+                    animation: fade-in 0.3s ease-in-out;
+                }
+            `}</style>
     </div>
   );
 };

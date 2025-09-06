@@ -8,14 +8,15 @@ import Checkauth from './protected/CheckAuth'
 import LearnerLandingPage from './screens/LearnerLandingPage'
 import LearnerLogin from './screens/LearnerLogin'
 import LearnerDashboard from './screens/LearnerDashboard'
-import Connecting from './screens/MatchedEducator'
-import LandingPage from './screens/LearnerLandingPage'
 import HomePage from './screens/LandingPage'
 import EducatorDashboard from './screens/EducatorDashboard'
 import EducatorLogin from './screens/EducatorLogin'
 import CheckAuthForEducator from './protected/CheckAuthForEducator'
 import MatchedLearner from './screens/MatchedLearner'
 import MatchedEducator from './screens/MatchedEducator'
+import ForgotPassword from './screens/ForgotPassword'
+import CheckUser from './protected/CheckRole'
+import PaymentPage from './screens/PaymentPage'
 
 function App() {
 
@@ -29,6 +30,7 @@ function App() {
           <Route path='/room/:roomId' element={<Room />} />
           <Route path='/user/signup' element={<LearnerSignup />} />
           <Route path="/learner/login" element={<LearnerLogin />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path='/learner/upload-profile-photo' element={
             <Checkauth protectedRoute={true}>
               <LearnerLandingPage />
@@ -36,7 +38,9 @@ function App() {
           } />
           <Route path="/learner/dashboard"
             element={<Checkauth protectedRoute={true}>
-              <LearnerDashboard />
+              <CheckUser>
+                <LearnerDashboard />
+              </CheckUser>
             </Checkauth>} />
 
 
@@ -61,6 +65,11 @@ function App() {
             </CheckAuthForEducator>} />
 
 
+          <Route path="/make-payment" element={
+            <Checkauth protectedRoute={true}>
+              <PaymentPage />
+            </Checkauth>
+          } />
 
         </Routes>
 

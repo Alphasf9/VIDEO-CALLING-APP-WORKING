@@ -7,6 +7,7 @@ import { useSocket } from '../context/SocketContext';
 import { useRoom } from '../context/RoomContext';
 import SessionDetails from './SessionDetails';
 import UserSessions from './UserSessions';
+import SearchLearners from './SearchLearner';
 
 
 const EducatorDashboard = () => {
@@ -21,6 +22,8 @@ const EducatorDashboard = () => {
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
     const [connectionRequest, setConnectionRequest] = useState(null);
     const [recentRoomId, setRecentRoomId] = useState();
+    const [query, setQuery] = useState('');
+
     const { setRoomId } = useRoom();
 
     const searchMessages = [
@@ -262,18 +265,23 @@ const EducatorDashboard = () => {
             <nav className="bg-white bg-opacity-95 backdrop-blur-lg shadow-md p-4 fixed w-full z-20">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                        <img src="/logo.png" alt="Platform Logo" className="h-12" />
+                        <img src="/logo2.png" alt="Platform Logo"
+                            className="h-12 w-12 object-contain rounded-full bg-white p-2 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                        />
                         <h1 className="text-3xl font-extrabold text-indigo-700">Learning Hub</h1>
                     </div>
                     <div className="flex items-center space-x-6">
                         <div className="relative">
                             <input
                                 type="text"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
                                 placeholder="Search for learners or topics..."
                                 className="pl-12 pr-6 py-3 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800 font-medium bg-white bg-opacity-80 w-80"
                             />
                             <FaUsers className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-500 text-xl" />
                         </div>
+                        <SearchLearners query={query} />
                         <div className="relative group">
                             {user?.avatarUrl ? (
                                 <div className={`relative w-12 h-12 rounded-full border-2 ${user.availability === 'online' ? 'border-green-500' : 'border-red-500'} shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer`}>
@@ -513,30 +521,66 @@ const EducatorDashboard = () => {
                     </section>
 
                     {/* Recent Sessions */}
-                    <section className="bg-white bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-xl p-8 transform hover:scale-102 transition-all duration-300">
-                        <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center space-x-3">
-                            <FaVideo className="text-indigo-600 text-3xl" />
-                            <span>Your Recent Session</span>
-                        </h2>
-                        {recentRoomId ? (
-                            <SessionDetails sessionId={recentRoomId} userId={user.userId} />
+                    <div className="p-6 bg-white shadow-md rounded-2xl">
+                        {user.isPremium ? (
+                            <>
+                                {/* Recent Session Section */}
+                                <section className="bg-white bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-xl p-8 transform hover:scale-102 transition-all duration-300">
+                                    <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center space-x-3">
+                                        <FaVideo className="text-indigo-600 text-3xl" />
+                                        <span>Your Recent Session</span>
+                                    </h2>
+                                    {recentRoomId ? (
+                                        <SessionDetails sessionId={recentRoomId} userId={user.userId} />
+                                    ) : (
+                                        <div className="text-center py-12">
+                                            <FaVideo className="text-5xl text-indigo-300 mb-4 mx-auto" />
+                                            <p className="text-xl font-semibold text-gray-700 mb-2">
+                                                No recent sessions yet.
+                                            </p>
+                                            <p className="text-gray-500 text-md mb-6">
+                                                Start a new teaching session to inspire and guide your learners!
+                                            </p>
+                                            <button
+                                                onClick={handleSearch}
+                                                className="px-8 py-4 bg-gradient-to-r from-green-500 to-blue-500 text-gray-900 font-bold rounded-full 
+                         hover:from-green-600 hover:to-blue-600 transition-all duration-300 flex items-center justify-center 
+                         space-x-3 mx-auto shadow-2xl hover:shadow-3xl transform hover:scale-110"
+                                            >
+                                                <FaRocket className="text-2xl" />
+                                                <span>Find Learners</span>
+                                            </button>
+                                        </div>
+                                    )}
+                                </section>
+
+                                {/* Session Analysis Section */}
+                                <UserSessions userId={user.userId} recentRoomId={recentRoomId} />
+                            </>
                         ) : (
-                            <div className="text-center py-12">
-                                <FaVideo className="text-5xl text-indigo-300 mb-4 mx-auto" />
-                                <p className="text-xl font-semibold text-gray-700 mb-2">No recent sessions yet.</p>
-                                <p className="text-gray-500 text-md mb-6">Start a new teaching session to inspire and connect with learners!</p>
-                                <button
-                                    onClick={handleSearch}
-                                    className="px-8 py-4 bg-gradient-to-r from-green-500 to-blue-500 text-gray-900 font-bold rounded-full hover:from-green-600 hover:to-blue-600 transition-all duration-300 flex items-center justify-center space-x-3 mx-auto shadow-2xl hover:shadow-3xl transform hover:scale-110"
+                            // Upgrade Prompt for Free Educators
+                            <div className="text-center py-12 px-6">
+                                <h2 className="text-3xl font-bold mb-4 text-gray-800">
+                                    Unlock Premium Teaching Tools ✨
+                                </h2>
+                                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                                    Gain access to <span className="font-semibold text-indigo-600">detailed session insights</span>,
+                                    track your <span className="font-semibold">student engagement</span>, and showcase your impact
+                                    as an educator. Upgrade to <span className="font-bold">Learning Hub Premium</span> and take your
+                                    teaching to the next level.
+                                </p>
+                                <a
+                                    href="/"
+                                    className="inline-block px-8 py-4 bg-indigo-600 text-white rounded-xl 
+                   hover:bg-indigo-700 transition-all font-semibold shadow-md hover:shadow-lg"
                                 >
-                                    <FaRocket className="text-2xl" />
-                                    <span>Find Learners</span>
-                                </button>
+                                    🚀 Upgrade to Premium
+                                </a>
                             </div>
                         )}
-                    </section>
+                    </div>
 
-                    <UserSessions userId={user.userId} recentRoomId={recentRoomId} />
+
 
                     {/* Community Spotlight */}
                     <section className="bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-3xl shadow-2xl p-8 transform hover:scale-102 transition-all duration-500">

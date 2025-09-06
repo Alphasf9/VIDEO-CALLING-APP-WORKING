@@ -2,16 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import api from '../api/AxiosInstance';
 import { useNavigate } from 'react-router-dom';
-import { FaUserCircle, FaEdit, FaSignOutAlt, FaBookOpen, FaChartLine, FaRocket, FaCheck, FaTimes, FaLightbulb, FaQuoteLeft } from 'react-icons/fa';
+import { FaUserCircle, FaEdit, FaSignOutAlt, FaBookOpen, FaChartLine, FaRocket, FaCheck, FaTimes, FaLightbulb, FaQuoteLeft, FaKey, FaCrown } from 'react-icons/fa';
 import { useEducator } from '../context/EducatorContext';
 import { useSocket } from '../context/SocketContext';
 import { useRoom } from '../context/RoomContext';
-import SessionDetails from './SessionDetails';
 import UserSessions from './UserSessions';
+import SearchEducator from './SearchEducator';
 
 const LearnerDashboard = () => {
   const { user, clearUserSession, setUser } = useUser();
-  // console.log(user)
   const navigate = useNavigate();
   const socket = useSocket();
   const [bioInput, setBioInput] = useState(user?.bio || '');
@@ -24,6 +23,7 @@ const LearnerDashboard = () => {
   const [connectionRequest, setConnectionRequest] = useState(null);
   const { setRoomId } = useRoom();
   const [recentRoomId, setRecentRoomId] = useState();
+  const [query, setQuery] = useState('');
 
   const loadingMessages = [
     'Scanning for top educators...',
@@ -43,11 +43,11 @@ const LearnerDashboard = () => {
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
 
   const realRoomId = localStorage.getItem("roomId");
-  useEffect(()=>{
+  useEffect(() => {
     if (realRoomId) {
       setRecentRoomId(realRoomId);
     }
-  },[realRoomId])
+  }, [realRoomId]);
 
   useEffect(() => {
     const quoteInterval = setInterval(() => {
@@ -210,6 +210,20 @@ const LearnerDashboard = () => {
     ? 'Join the Learning Lobby to share your expertise with eager learners. Connect and inspire through your skills!'
     : 'Dive into the Learning Lobby to connect with expert educators. Explore your interests and boost your skills!';
 
+  // Determine premium badge color based on premium plan
+  const getPremiumBadgeColor = () => {
+    switch (user?.premiumPlan) {
+      case 'Educator Pro':
+        return 'from-yellow-400 to-yellow-600';
+      case 'Institution Elite':
+        return 'from-purple-500 to-purple-700';
+      case 'Basic':
+        return 'from-blue-400 to-blue-600';
+      default:
+        return '';
+    }
+  };
+
   if (isSearching) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 flex flex-col items-center justify-center text-white relative overflow-hidden">
@@ -286,18 +300,23 @@ const LearnerDashboard = () => {
       <nav className="bg-white bg-opacity-95 backdrop-blur-lg shadow-md p-4 fixed w-full z-20">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <img src="/logo.png" alt="Platform Logo" className="h-12" />
+            <img src="/logo2.png" alt="Platform Logo" 
+              className="h-12 w-12 object-contain rounded-full bg-white p-2 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+/>
             <h1 className="text-3xl font-extrabold text-indigo-700">Learning Hub</h1>
           </div>
           <div className="flex items-center space-x-6">
             <div className="relative">
               <input
                 type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search for courses or educators..."
                 className="pl-12 pr-6 py-3 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800 font-medium bg-white bg-opacity-80 w-80"
               />
               <FaBookOpen className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-500 text-xl" />
             </div>
+            <SearchEducator query={query} />
             <div className="relative group">
               {user?.avatarUrl ? (
                 <div className={`relative w-12 h-12 rounded-full border-2 ${user.availability === 'online' ? 'border-green-500' : 'border-red-500'} shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer`}>
@@ -307,6 +326,9 @@ const LearnerDashboard = () => {
                     className="w-full h-full rounded-full object-cover"
                     onClick={() => navigate('/profile')}
                   />
+                  {user?.isPremium && (
+                    <FaCrown className="absolute -top-2 -right-2 text-2xl text-yellow-500 animate-pulse" />
+                  )}
                   <div
                     className={`absolute inset-0 rounded-full border-4 ${user.availability === 'online' ? 'border-green-500 animate-aura-online' : 'border-red-500 animate-aura-offline'} opacity-40 group-hover:opacity-70 transition-opacity duration-300`}
                   ></div>
@@ -317,6 +339,9 @@ const LearnerDashboard = () => {
                     className={`text-5xl ${user.availability === 'online' ? 'text-green-600' : 'text-red-600'} hover:scale-105 transition-transform duration-300`}
                     onClick={() => navigate('/profile')}
                   />
+                  {user?.isPremium && (
+                    <FaCrown className="absolute -top-2 -right-2 text-2xl text-yellow-500 animate-pulse" />
+                  )}
                   <div
                     className={`absolute inset-0 rounded-full border-4 ${user.availability === 'online' ? 'border-green-500 animate-aura-online' : 'border-red-500 animate-aura-offline'} opacity-40 group-hover:opacity-70 transition-opacity duration-300`}
                   ></div>
@@ -341,7 +366,7 @@ const LearnerDashboard = () => {
       <main className="max-w-7xl mx-auto pt-32 pb-12 px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Sidebar - Profile Card */}
         <aside className="md:col-span-1 space-y-8">
-          <div className="bg-white bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-xl p-8 text-center transform hover:scale-105 transition-all duration-300">
+          <div className={`bg-white bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-xl p-8 text-center transform hover:scale-105 transition-all duration-300 ${user?.isPremium ? `bg-gradient-to-r ${getPremiumBadgeColor()}` : ''}`}>
             <div className="relative inline-block mb-4">
               {user?.avatarUrl ? (
                 <div className={`relative w-32 h-32 rounded-full border-4 ${user.availability === 'online' ? 'border-green-500' : 'border-red-500'} shadow-lg hover:shadow-xl transition-all duration-300`}>
@@ -350,6 +375,9 @@ const LearnerDashboard = () => {
                     alt={`${user.name}'s profile`}
                     className="w-full h-full rounded-full object-cover"
                   />
+                  {user?.isPremium && (
+                    <FaCrown className="absolute -top-2 -right-2 text-3xl text-yellow-500 animate-pulse" />
+                  )}
                   <div
                     className={`absolute inset-0 rounded-full border-8 ${user.availability === 'online' ? 'border-green-500 animate-aura-online' : 'border-red-500 animate-aura-offline'} opacity-40 hover:opacity-70 transition-opacity duration-300`}
                   ></div>
@@ -357,6 +385,9 @@ const LearnerDashboard = () => {
               ) : (
                 <div className={`relative w-32 h-32 rounded-full border-4 ${user.availability === 'online' ? 'border-green-500' : 'border-red-500'} shadow-lg hover:shadow-xl transition-all duration-300`}>
                   <FaUserCircle className={`text-9xl ${user.availability === 'online' ? 'text-green-600' : 'text-red-600'} mx-auto`} />
+                  {user?.isPremium && (
+                    <FaCrown className="absolute -top-2 -right-2 text-3xl text-yellow-500 animate-pulse" />
+                  )}
                   <div
                     className={`absolute inset-0 rounded-full border-8 ${user.availability === 'online' ? 'border-green-500 animate-aura-online' : 'border-red-500 animate-aura-offline'} opacity-40 hover:opacity-70 transition-opacity duration-300`}
                   ></div>
@@ -369,6 +400,13 @@ const LearnerDashboard = () => {
             <h2 className="text-3xl font-extrabold text-gray-800">{user?.name || 'Guest'}</h2>
             <p className="text-gray-600 text-lg capitalize">{user?.role || 'Learner'}</p>
             <p className="text-gray-500 mt-2 text-md">{user?.email || 'N/A'}</p>
+            {user?.isPremium && (
+              <div className="mt-4">
+                <span className={`inline-block px-4 py-2 bg-gradient-to-r ${getPremiumBadgeColor()} text-white font-semibold rounded-full text-sm shadow-sm`}>
+                  {user.premiumPlan} Member
+                </span>
+              </div>
+            )}
             <button
               onClick={handleEditProfileClick}
               className="mt-6 w-full py-3 bg-gray-200 text-gray-700 rounded-full cursor-not-allowed flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition-all duration-300"
@@ -391,11 +429,34 @@ const LearnerDashboard = () => {
                   <span>User ID:</span>
                   <span className="font-medium truncate">{user?.userId || 'N/A'}</span>
                 </li>
+                {user?.isPremium && (
+                  <>
+                    <li className="flex justify-between text-md">
+                      <span>Premium Plan:</span>
+                      <span className="font-medium">{user?.premiumPlan || 'N/A'}</span>
+                    </li>
+                    <li className="flex justify-between text-md">
+                      <span>Premium Expires:</span>
+                      <span className="font-medium">{user?.premiumExpiresAt ? formatDate(user.premiumExpiresAt) : 'N/A'}</span>
+                    </li>
+                  </>
+                )}
               </ul>
             </div>
+            {!user?.isPremium && (
+              <div className="mt-6">
+                <button
+                  onClick={() => navigate('/')}
+                  className="w-full py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-full hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105"
+                >
+                  <FaCrown className="text-xl" />
+                  <span>Upgrade to Premium</span>
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* New Inspirational Quote Section in Sidebar */}
+          {/* Inspirational Quote Section in Sidebar */}
           <div className="bg-gradient-to-r from-indigo-100 to-purple-100 bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300">
             <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center space-x-2">
               <FaLightbulb className="text-yellow-500 text-2xl" />
@@ -407,6 +468,42 @@ const LearnerDashboard = () => {
               <p className="text-right text-gray-500 text-sm font-medium">- {inspirationalQuotes[currentQuoteIndex].author}</p>
             </div>
           </div>
+
+          {/* Premium Features Section */}
+          {user?.isPremium && (
+            <div className="bg-gradient-to-r from-yellow-100 to-orange-100 bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center space-x-2">
+                <FaCrown className="text-yellow-500 text-2xl" />
+                <span>Premium Features</span>
+              </h3>
+              <ul className="space-y-3 text-gray-700">
+                <li className="flex items-center space-x-2">
+                  <FaCheck className="text-green-500" />
+                  <span>Priority Matching with Top Educators</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <FaCheck className="text-green-500" />
+                  <span>Access to Exclusive Webinars</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <FaCheck className="text-green-500" />
+                  <span>Advanced Analytics Dashboard</span>
+                </li>
+                {user?.premiumPlan === 'Educator Pro' && (
+                  <li className="flex items-center space-x-2">
+                    <FaCheck className="text-green-500" />
+                    <span>Enhanced Educator Tools</span>
+                  </li>
+                )}
+                {user?.premiumPlan === 'Institution Elite' && (
+                  <li className="flex items-center space-x-2">
+                    <FaCheck className="text-green-500" />
+                    <span>Institutional Admin Access</span>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
         </aside>
 
         {/* Main Sections */}
@@ -514,21 +611,31 @@ const LearnerDashboard = () => {
           )}
 
           {/* Session Details Section */}
-          <UserSessions userId={user.userId} recentRoomId={recentRoomId} />
+          <div className="p-6 bg-white shadow-md rounded-lg">
+            {user.isPremium ? (
+              <UserSessions userId={user.userId} recentRoomId={recentRoomId} />
+            ) : (
+              <div className="text-center py-12 px-6">
+                <h2 className="text-2xl font-bold mb-4 text-gray-800">
+                  Upgrade to Premium
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  Access detailed session analysis and track your learning progress by upgrading to a Premium subscription.
+                </p>
+                <a
+                  href="/pricing"
+                  className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold"
+                >
+                  Upgrade Now
+                </a>
+              </div>
+            )}
+          </div>
 
+
+          
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="bg-white bg-opacity-95 backdrop-blur-lg shadow-md p-6 text-center text-gray-500 text-md">
-        <p>© 2025 Learning Hub. All rights reserved.</p>
-        <p className="mt-3">
-          Crafted with passion by{' '}
-          <a href="mailto:developerhaseeb1234@gmail.com" className="text-indigo-700 font-semibold hover:underline">
-            Mohd Haseeb Ali
-          </a>
-        </p>
-      </footer>
 
       <style jsx>{`
         @keyframes blob {

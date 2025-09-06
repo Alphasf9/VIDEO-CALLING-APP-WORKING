@@ -18,18 +18,21 @@ export const createUser = async (user) => {
             userId: user.userId,
             name: user.name,
             email: user.email,
-            role: user.role || "learner", // "learner" or "educator"
+            role: user.role || "learner",
             topics: user.topics || [], // for learner
             skills: user.skills || [], // for educator
             bio: user.bio || "",
             password: user.password,
             refreshToken: user.refreshToken || null,
-            availability: user.availability || "offline", // "online", "offline", "busy"
+            availability: user.availability || "offline",
             currentSessionId: user.currentSessionId || null,
             socketId: user.socketId || null,
             avatarUrl: user.avatarUrl || null,
             rating: user.rating || 0,
             totalSessions: user.totalSessions || 0,
+            premiumPlan: user.premiumPlan || null,    // basic || pro || elite
+            premiumExpiresAt: user.premiumExpiresAt || null,
+            isPremium: user.isPremium || false,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             lastOnline: new Date().toISOString()
@@ -41,9 +44,7 @@ export const createUser = async (user) => {
     return { ...params.Item };
 };
 
-/**
- * Get a user by ID
- */
+
 export const getUser = async (userId) => {
     const params = {
         TableName: USER_TABLE,
@@ -53,9 +54,7 @@ export const getUser = async (userId) => {
     return result.Item || null;
 };
 
-/**
- * Update a user
- */
+
 export const updateUser = async (userId, updates) => {
     let updateExp = "SET";
     const expAttrVals = {};
@@ -89,9 +88,7 @@ export const updateUser = async (userId, updates) => {
     return result.Attributes;
 };
 
-/**
- * Delete a user
- */
+
 export const deleteUser = async (userId) => {
     const params = {
         TableName: USER_TABLE,
@@ -116,19 +113,14 @@ export const listUsers = async (limit = 20, lastKey = null) => {
     };
 };
 
-/**
- * Check if user exists by ID
- */
+
 export const userExists = async (userId) => {
     const user = await getUser(userId);
     return !!user;
 };
 
-/**
- * Check if user exists by email
- */
+
 export const userExistsByEmail = async (email) => {
-    // Email search is case-sensitive by default in DynamoDB
     const params = {
         TableName: USER_TABLE,
         FilterExpression: "#email = :email",
@@ -225,19 +217,19 @@ export async function updateUserAvailability(userId, socketId, status) {
         const expAttrNames = {};
         const expAttrVals = {};
 
-       
+
         expressionParts.push("#availability = :status");
         expAttrNames["#availability"] = "availability";
         expAttrVals[":status"] = status;
 
-       
+
         if (socketId !== undefined) {
             expressionParts.push("#socketId = :socketId");
             expAttrNames["#socketId"] = "socketId";
             expAttrVals[":socketId"] = socketId;
         }
 
-        
+
         expressionParts.push("#updatedAt = :updatedAt");
         expAttrNames["#updatedAt"] = "updatedAt";
         expAttrVals[":updatedAt"] = new Date().toISOString();
@@ -261,3 +253,98 @@ export async function updateUserAvailability(userId, socketId, status) {
 }
 
 
+export const searchEducators = async (searchQuery) => {
+    const params = {
+        TableName: USER_TABLE,
+        FilterExpression: "#role = :educator",
+        ExpressionAttributeNames: {
+            "#role": "role",
+        },
+        ExpressionAttributeValues: {
+            ":educator": "educator",
+        },
+    };
+
+    if (searchQuery) {
+        params.FilterExpression += " AND (contains(#name, :q) OR contains(#skills, :q))";
+        params.ExpressionAttributeNames["#name"] = "name";
+        params.ExpressionAttributeNames["#skills"] = "skills";
+        params.ExpressionAttributeValues[":q"] = searchQuery;
+    }
+
+    const result = await ddbDocClient.send(new ScanCommand(params));
+    return result.Items || [];
+};
+
+
+export const getAllLearners = async (searchQuery) => {
+    try {
+        const params = {
+            TableName: USER_TABLE,
+            FilterExpression: "#role = :learner",
+            ExpressionAttributeNames: {
+                "#role": "role",
+            },
+            ExpressionAttributeValues: {
+                ":learner": "learner",
+            },
+        };
+
+        if (searchQuery) {
+            params.FilterExpression += " AND (contains(#name, :q) OR contains(#topics, :q))";
+            params.ExpressionAttributeNames["#name"] = "name";
+            params.ExpressionAttributeNames["#topics"] = "topics";
+            params.ExpressionAttributeValues[":q"] = searchQuery;
+        }
+
+        const result = await ddbDocClient.send(new ScanCommand(params));
+        return result.Items || [];
+    } catch (err) {
+        console.error("❌ Error fetching learners:", err);
+        throw err;
+    }
+};
+
+
+
+export const rateEducator = async (userId, newRating) => {
+    if (!newRating || newRating < 1 || newRating > 5) {
+        throw new Error("Rating must be between 1 and 5");
+    }
+
+    const params = {
+        TableName: USER_TABLE,
+        Key: { userId }
+    };
+
+    const result = await ddbDocClient.send(new GetCommand(params));
+    const user = result.Item;
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    if (user.role !== "educator") {
+        throw new Error("Only educators can be rated");
+    }
+
+    const oldRating = user.rating || 0;
+    const ratingCount = user.ratingCount || 0;
+
+    const updatedRating = (oldRating * ratingCount + newRating) / (ratingCount + 1);
+
+    const updateParams = {
+        TableName: USER_TABLE,
+        Key: { userId },
+        UpdateExpression: "SET rating = :r, ratingCount = :c, updatedAt = :u",
+        ExpressionAttributeValues: {
+            ":r": updatedRating,
+            ":c": ratingCount + 1,
+            ":u": new Date().toISOString()
+        },
+        ReturnValues: "ALL_NEW"
+    };
+
+    const updateResult = await ddbDocClient.send(new UpdateCommand(updateParams));
+    return updateResult.Attributes;
+};
