@@ -13,6 +13,7 @@ import sessionRoutes from "./routes/Session.routes.js";
 import transcriptionRoutes from "./routes/Transcription.routes.js";
 import sessionRequestPerUser from "./routes/Sessionrequest.routes.js";
 import paymentRoutes from "./routes/Payment.routes.js";
+import ratingRoutes from "./routes/Rating.routes.js";
 import { updateUserAvailability } from "./models/User.model.js";
 import { inngest } from './inngest/client.js'
 import { serve } from "inngest/express";
@@ -44,6 +45,7 @@ const emailToSocketIdMap = new Map();
 const socketIdToEmailMap = new Map();
 const educatorIdToSocketIdMap = new Map();
 const learnerIdToSocketIdMap = new Map();
+const newLearnerIdToSocketIdMap = new Map();
 
 io.on("connection", (socket) => {
     console.log(`🟢 User connected: ${socket.id}`);
@@ -56,7 +58,9 @@ io.on("connection", (socket) => {
     });
 
     socket.on("learner:login", ({ learnerId, role }) => {
+        console.log("🟡 Learner login event received", { learnerId, socketId: socket.id });
         learnerIdToSocketIdMap.set(learnerId, socket.id);
+        newLearnerIdToSocketIdMap.set(learnerId, socket.id);
         console.log(`Learner Login:- Learner ID: ${learnerId} has socket ${socket.id}`);
     })
 
@@ -132,18 +136,29 @@ io.on("connection", (socket) => {
         });
     });
 
-
+    //////////////////////
     socket.on("connection-request-by-educator", ({ from, learnerId }) => {
         console.log(`🟢 Connection request by educator: ${from} to learner: ${learnerId}`);
-        const learnerSocketId = learnerIdToSocketIdMap.get(learnerId);
+        console.log("🟢 Connection request", { from, learnerId });
+        console.log("Current learner map:", Array.from(learnerIdToSocketIdMap.entries()));
+
+        // Try both maps
+        let learnerSocketId = newLearnerIdToSocketIdMap.get(learnerId);
+        if (!learnerSocketId) {
+            learnerSocketId = learnerIdToSocketIdMap.get(learnerId);
+        }
+
         console.log(`Learner socket ID: ${learnerSocketId}`);
         educatorIdToSocketIdMap.set(from, socket.id);
+
         if (!learnerSocketId) {
             console.log(`❌ Learner ${learnerId} is offline`);
             return;
         }
+
         io.to(learnerSocketId).emit("connection-request-by-learner", { from });
-    })
+    });
+
 
     socket.on("disconnect", () => {
         console.log(`🔴 User disconnected: ${socket.id}`);
@@ -156,6 +171,7 @@ app.use('/api/v1/sessions', sessionRoutes);
 app.use('/api/v1/session-requests', sessionRequestPerUser);
 app.use('/api/v1/transcriptions', transcriptionRoutes);
 app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/ratings', ratingRoutes);
 app.use('/api/v1/inngest', serve({
     client: inngest,
     functions: [onSessionEnd]

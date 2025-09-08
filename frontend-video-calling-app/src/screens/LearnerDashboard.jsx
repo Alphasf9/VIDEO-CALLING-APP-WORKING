@@ -8,6 +8,7 @@ import { useSocket } from '../context/SocketContext';
 import { useRoom } from '../context/RoomContext';
 import UserSessions from './UserSessions';
 import SearchEducator from './SearchEducator';
+import TopRatedEducators from './TopRatedEducators';
 
 const LearnerDashboard = () => {
   const { user, clearUserSession, setUser } = useUser();
@@ -41,6 +42,10 @@ const LearnerDashboard = () => {
   ];
 
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+  socket.onAny((event, ...args) => {
+    console.log("📡 Got event:", event, args);
+  });
+
 
   const realRoomId = localStorage.getItem("roomId");
   useEffect(() => {
@@ -63,7 +68,7 @@ const LearnerDashboard = () => {
       console.log("Socket connected on learner dashboard:", socket.id);
 
       if (user?.userId) {
-        socket.emit("register-user", { userId: user.userId });
+        socket.emit("user:register", { userId: user.userId });
       }
 
       console.log("🟢 Attaching listener for connection request");
@@ -300,9 +305,9 @@ const LearnerDashboard = () => {
       <nav className="bg-white bg-opacity-95 backdrop-blur-lg shadow-md p-4 fixed w-full z-20">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <img src="/logo2.png" alt="Platform Logo" 
+            <img src="/logo2.png" alt="Platform Logo"
               className="h-12 w-12 object-contain rounded-full bg-white p-2 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-/>
+            />
             <h1 className="text-3xl font-extrabold text-indigo-700">Learning Hub</h1>
           </div>
           <div className="flex items-center space-x-6">
@@ -632,8 +637,12 @@ const LearnerDashboard = () => {
             )}
           </div>
 
+          <div>
+            <TopRatedEducators />
+          </div>
 
-          
+
+
         </div>
       </main>
 

@@ -8,6 +8,7 @@ import { useRoom } from '../context/RoomContext';
 import SessionDetails from './SessionDetails';
 import UserSessions from './UserSessions';
 import SearchLearners from './SearchLearner';
+import TopRatedLearners from './TopRatedLearners';
 
 
 const EducatorDashboard = () => {
@@ -48,7 +49,7 @@ const EducatorDashboard = () => {
             setCurrentQuoteIndex((prev) => (prev + 1) % inspirationalQuotes.length);
         }, 10000);
         return () => clearInterval(quoteInterval);
-    }, []);
+    }, [inspirationalQuotes.length]);
 
     function generateRoomId(length = 8) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -599,6 +600,10 @@ const EducatorDashboard = () => {
                             </div>
                         </div>
                     </section>
+
+                    <div>
+                        <TopRatedLearners/>
+                    </div>
                 </div>
             </main>
 

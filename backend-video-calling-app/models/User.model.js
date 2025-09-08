@@ -348,3 +348,24 @@ export const rateEducator = async (userId, newRating) => {
     const updateResult = await ddbDocClient.send(new UpdateCommand(updateParams));
     return updateResult.Attributes;
 };
+
+
+
+export const getAllEducators = async (searchQuery = null) => {
+    const params = {
+        TableName: USER_TABLE,
+        FilterExpression: "#role = :educator",
+        ExpressionAttributeNames: { "#role": "role" },
+        ExpressionAttributeValues: { ":educator": "educator" }
+    };
+
+    if (searchQuery) {
+        params.FilterExpression += " AND (contains(#name, :q) OR contains(#skills, :q))";
+        params.ExpressionAttributeNames["#name"] = "name";
+        params.ExpressionAttributeNames["#skills"] = "skills";
+        params.ExpressionAttributeValues[":q"] = searchQuery;
+    }
+
+    const result = await ddbDocClient.send(new ScanCommand(params));
+    return result.Items || [];
+};

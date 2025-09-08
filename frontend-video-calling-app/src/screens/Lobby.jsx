@@ -80,7 +80,7 @@ const Lobby = () => {
             {/* Main Content */}
             <div className="bg-white bg-opacity-95 backdrop-blur-lg rounded-3xl shadow-xl w-full max-w-lg p-8 md:p-12 border border-gray-200 transform transition-all duration-500 hover:shadow-2xl z-10">
                 <div className="text-center mb-10">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700 animate-fade-in">
+                    <h1 className="text-4xl md:text-5xl font-extrabold  bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700 animate-fade-in">
                         Learning Hub
                     </h1>
                     <p className="text-gray-600 mt-4 text-lg md:text-xl font-medium max-w-md mx-auto">

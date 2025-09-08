@@ -7,6 +7,7 @@ import {
     QueryCommand
 } from "@aws-sdk/lib-dynamodb";
 import { ddbDocClient } from "../database/connectDB.js";
+import * as UserModel from './User.model.js';
 
 const RATING_TABLE = process.env.RATING_TABLE;
 
@@ -22,7 +23,7 @@ export const createRating = async (rating) => {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         },
-        ConditionExpression: "attribute_not_exists(sessionId) AND attribute_not_exists(fromUserId)" 
+        ConditionExpression: "attribute_not_exists(sessionId) AND attribute_not_exists(fromUserId)"
     };
 
     await ddbDocClient.send(new PutCommand(params));
@@ -36,6 +37,11 @@ export const getRating = async (sessionId, fromUserId) => {
     };
     const result = await ddbDocClient.send(new GetCommand(params));
     return result.Item || null;
+};
+
+const getUserAvgRating = (ratings = []) => {
+    if (!ratings.length) return 0;
+    return ratings.reduce((a, b) => a + b, 0) / ratings.length;
 };
 
 export const updateRating = async (sessionId, fromUserId, updates) => {
@@ -83,7 +89,7 @@ export const deleteRating = async (sessionId, fromUserId) => {
 export const getRatingsForUser = async (toUserId) => {
     const params = {
         TableName: RATING_TABLE,
-        IndexName: "toUserIndex", 
+        IndexName: "toUserId-rating-index",
         KeyConditionExpression: "#toUserId = :toUserId",
         ExpressionAttributeNames: { "#toUserId": "toUserId" },
         ExpressionAttributeValues: { ":toUserId": toUserId }
@@ -98,4 +104,56 @@ export const calculateAverageRating = async (toUserId) => {
     if (!ratings || ratings.length === 0) return 0;
     const sum = ratings.reduce((acc, r) => acc + r.rating, 0);
     return sum / ratings.length;
+};
+
+
+
+export const getTopRatedEducators = async (limit = 5) => {
+    const allEducators = await UserModel.getAllEducators();
+
+    const ratingResult = await ddbDocClient.send(new ScanCommand({ TableName: RATING_TABLE }));
+    const allRatings = ratingResult.Items || [];
+    const ratingMap = {};
+    allRatings.forEach(r => {
+        if (!ratingMap[r.toUserId]) ratingMap[r.toUserId] = [];
+        ratingMap[r.toUserId].push(Number(r.rating));
+    });
+
+    const educatorsWithRating = allEducators.map(u => ({
+        userId: u.userId,
+        name: u.name,
+        avatarUrl: u.avatarUrl,
+        skills: u.skills || [],
+        avgRating: getUserAvgRating(ratingMap[u.userId])
+    }));
+
+    educatorsWithRating.sort((a, b) => b.avgRating - a.avgRating);
+
+    return educatorsWithRating.slice(0, limit);
+};
+
+
+export const getTopRatedLearners = async (limit = 5) => {
+    const allLearners = await UserModel.getAllLearners();
+
+    const ratingResult = await ddbDocClient.send(new ScanCommand({ TableName: RATING_TABLE }));
+    const allRatings = ratingResult.Items || [];
+
+    const ratingMap = {};
+    allRatings.forEach(r => {
+        if (!ratingMap[r.toUserId]) ratingMap[r.toUserId] = [];
+        ratingMap[r.toUserId].push(Number(r.rating));
+    });
+
+    const learnersWithRating = allLearners.map(u => ({
+        userId: u.userId,
+        name: u.name,
+        avatarUrl: u.avatarUrl,
+        topics: u.topics || [],
+        avgRating: getUserAvgRating(ratingMap[u.userId])
+    }));
+
+    learnersWithRating.sort((a, b) => b.avgRating - a.avgRating);
+
+    return learnersWithRating.slice(0, limit);
 };
