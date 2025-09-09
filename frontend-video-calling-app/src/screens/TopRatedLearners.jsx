@@ -153,8 +153,12 @@ const TopRatedLearners = () => {
                             </p>
                         )}
                         <p className="text-gray-500 mt-2 text-sm text-center">
-                            <span className="font-medium">Skills:</span>{" "}
-                            {truncateText(learner.skills.join(", "), 50) || "N/A"}
+                            <span className="font-medium">Topics:</span>{" "}
+                            {truncateText(learner.topics.join(", "), 50) || "N/A"}
+                        </p>
+                        <p className="text-gray-500 mt-2 text-sm text-center">
+                            <span className="font-medium">Bio:</span>{" "}
+                            {truncateText(learner.bio, 60) || "N/A"}
                         </p>
 
                         {/* Action Button */}

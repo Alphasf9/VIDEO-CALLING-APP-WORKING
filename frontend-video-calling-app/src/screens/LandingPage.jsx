@@ -123,7 +123,8 @@ const HomePage = () => {
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                         <img src="/logo2.png" alt="Platform Logo"
-                             className="h-12 w-12 object-contain rounded-full bg-white p-2 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                           
+                            className="h-12 w-12 object-contain rounded-full bg-white p-2 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                         />
                         <h1 className="text-2xl font-bold text-indigo-600">Learning Hub</h1>
                     </div>

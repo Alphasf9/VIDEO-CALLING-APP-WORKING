@@ -124,6 +124,8 @@ export const getTopRatedEducators = async (limit = 5) => {
         name: u.name,
         avatarUrl: u.avatarUrl,
         skills: u.skills || [],
+        topics: u.topics || [],
+        bio: u.bio || "",
         avgRating: getUserAvgRating(ratingMap[u.userId])
     }));
 
@@ -150,7 +152,8 @@ export const getTopRatedLearners = async (limit = 5) => {
         name: u.name,
         avatarUrl: u.avatarUrl,
         topics: u.topics || [],
-        avgRating: getUserAvgRating(ratingMap[u.userId])
+        avgRating: getUserAvgRating(ratingMap[u.userId]),
+        bio: u.bio || ""
     }));
 
     learnersWithRating.sort((a, b) => b.avgRating - a.avgRating);

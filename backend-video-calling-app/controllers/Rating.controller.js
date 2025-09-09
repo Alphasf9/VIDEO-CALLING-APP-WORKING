@@ -79,6 +79,8 @@ export const getTopRatedEducators = async (req, res) => {
     try {
         const topUsers = await RatingModel.getTopRatedEducators(5);
 
+        // console.log("All educators:", topUsers);
+
         const topEducatorsWithInfo = await Promise.all(
             topUsers.map(async (u) => {
                 const user = await UserModel.getUser(u.userId);
@@ -87,7 +89,9 @@ export const getTopRatedEducators = async (req, res) => {
                     avgRating: u.avgRating,
                     name: user?.name,
                     avatarUrl: user?.avatarUrl,
-                    skills: user?.skills || []
+                    skills: user?.skills || [],
+                    topics: user?.topics || [],
+                    bio: user?.bio || ""
                 };
             })
         );
@@ -110,7 +114,7 @@ export const getTopRatedLearners = async (req, res) => {
     try {
         const topUsers = await RatingModel.getTopRatedLearners(5);
 
-        // console.log("All learners:", topUsers);
+        console.log("All learners:", topUsers);
 
         const topLearnersWithInfo = await Promise.all(
             topUsers.map(async (u) => {
@@ -120,7 +124,8 @@ export const getTopRatedLearners = async (req, res) => {
                     avgRating: u.avgRating,
                     name: user?.name,
                     avatarUrl: user?.avatarUrl,
-                    skills: user?.skills || []
+                    topics: user?.topics || [],
+                    bio: user?.bio || ""
                 };
             })
         );
